@@ -684,6 +684,7 @@ export function Dashboard({
   const latestOrgIdRef = useRef(selectedOrgId);
   const sseRef = useRef<EventSource | null>(null);
   const lastRateLimitRefresh = useRef(0);
+  const newlyAddedOrgIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     latestOrgIdRef.current = selectedOrgId;
@@ -760,6 +761,46 @@ export function Dashboard({
       return;
     }
 
+    // Skip fetching for optimistic temp IDs - they have no data yet
+    if (selectedOrgId.startsWith("temp-")) {
+      setScanId(null);
+      setScanStatus(null);
+      setScanStatusInfo(null);
+      setResults([]);
+      setSelectedResult(null);
+      setScanHistory([]);
+      setLastScanTime(null);
+      setSelectedRows(new Set());
+      setShowCompare(false);
+      setOrgStats(null);
+      setScanDiff(null);
+      setShareToken(null);
+      setPreviousScores(new Map());
+      setResultsLoading(false);
+      return;
+    }
+
+    // Skip loading state for newly added orgs (no scan data yet)
+    const isNewlyAdded = newlyAddedOrgIds.current.has(selectedOrgId);
+    if (isNewlyAdded) {
+      newlyAddedOrgIds.current.delete(selectedOrgId);
+      setScanId(null);
+      setScanStatus(null);
+      setScanStatusInfo(null);
+      setResults([]);
+      setSelectedResult(null);
+      setScanHistory([]);
+      setLastScanTime(null);
+      setSelectedRows(new Set());
+      setShowCompare(false);
+      setOrgStats(null);
+      setScanDiff(null);
+      setShareToken(null);
+      setPreviousScores(new Map());
+      setResultsLoading(false);
+      return;
+    }
+
     const abortController = new AbortController();
 
     setScanId(null);
@@ -787,6 +828,15 @@ export function Dashboard({
           setResults(data.results);
           if (data.scan.completedAt) {
             setLastScanTime(data.scan.completedAt);
+          }
+          // Populate status info for running/queued scans
+          if (data.scan.status === "running" || data.scan.status === "queued") {
+            setScanStatusInfo({
+              status: data.scan.status,
+              startedAt: data.scan.startedAt,
+              totalRepoCount: data.scan.totalRepoCount ?? 0,
+              processedRepoCount: data.scan.processedRepoCount ?? 0,
+            });
           }
         }
       })
@@ -951,6 +1001,7 @@ export function Dashboard({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      newlyAddedOrgIds.current.add(data.id);
       setOrgs((prev) => prev.map((o) => (o.id === optimisticOrg.id ? data : o)));
       setSelectedOrgId(data.id);
       toast(`Connected ${ghOrg.login}`, "success");
@@ -987,6 +1038,7 @@ export function Dashboard({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      newlyAddedOrgIds.current.add(data.id);
       setOrgs((prev) => prev.map((o) => (o.id === optimisticOrg.id ? data : o)));
       setSelectedOrgId(data.id);
       toast(`Added ${name}`, "success");
