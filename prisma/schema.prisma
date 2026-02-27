@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  githubId      String?         @unique
+  email         String?         @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  organizations Organization[]
+  subscription  Subscription?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  githubOrgId String
+  name        String
+  ownerUserId String
+  owner       User         @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  scans       Scan[]
+  repositories Repository[]
+  createdAt   DateTime     @default(now())
+
+  @@unique([githubOrgId, ownerUserId])
+}
+
+model Scan {
+  id                 String      @id @default(uuid())
+  orgId              String
+  org                Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  status             ScanStatus  @default(queued)
+  startedAt          DateTime    @default(now())
+  completedAt        DateTime?
+  repoCount          Int         @default(0)
+  totalRepoCount     Int         @default(0)
+  processedRepoCount Int         @default(0)
+  shareToken         String?     @unique
+  scores             RepoScore[]
+  createdAt          DateTime    @default(now())
+}
+
+enum ScanStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+model Repository {
+  id            String       @id @default(uuid())
+  orgId         String
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  githubRepoId  String
+  name          String
+  defaultBranch String       @default("main")
+  archived      Boolean      @default(false)
+  pushedAt      DateTime?
+  scores        RepoScore[]
+  createdAt     DateTime     @default(now())
+
+  @@unique([orgId, githubRepoId])
+}
+
+model RepoScore {
+  id             String   @id @default(uuid())
+  scanId         String
+  scan           Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  repoId         String
+  repo           Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  scoreTotal     Int
+  scoreBreakdown Json
+  severity       Severity
+  createdAt      DateTime @default(now())
+
+  @@unique([scanId, repoId])
+}
+
+enum Severity {
+  low
+  high
+  severe
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus @default(active)
+  plan                 Plan               @default(free)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+}
+
+enum Plan {
+  free
+  pro
+}
