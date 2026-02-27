@@ -141,7 +141,7 @@ function MobileCard({
               <span className="text-text-quaternary text-xs font-mono">#{result.rank}</span>
               <span className="font-medium text-sm truncate">{result.repoName}</span>
               {result.archived && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
+                <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
               )}
             </div>
             {severityBadge(result.severity)}
@@ -157,16 +157,16 @@ function MobileCard({
           </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {result.scoreBreakdown.criticalVulnerabilities > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">Vulns</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">Vulns</span>
             )}
             {result.scoreBreakdown.noBranchProtection > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">No protection</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">No protection</span>
             )}
             {result.scoreBreakdown.stalePRs > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-subtle text-warning font-medium">Stale PRs</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-warning-subtle text-warning font-medium">Stale PRs</span>
             )}
             {result.scoreBreakdown.noCI > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-tertiary font-medium">No CI</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-tertiary font-medium">No CI</span>
             )}
           </div>
         </button>
@@ -181,11 +181,11 @@ type SeverityFilter = (typeof severityFilters)[number];
 function DeltaBadge({ current, previous }: { current: number; previous: number | undefined }) {
   if (previous === undefined) return null;
   const delta = current - previous;
-  if (delta === 0) return <span className="text-[10px] text-text-quaternary font-medium">=</span>;
+  if (delta === 0) return <span className="text-xs text-text-quaternary font-medium">=</span>;
   const isWorse = delta > 0;
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums ${
+      className={`inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums ${
         isWorse ? "text-danger" : "text-success"
       }`}
       title={`Was ${previous}, now ${current}`}
@@ -498,7 +498,7 @@ export function ResultsTable({
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-text-primary">{r.repoName}</span>
                       {r.archived && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
                       )}
                     </div>
                   </td>

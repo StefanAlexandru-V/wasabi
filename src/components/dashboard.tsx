@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
-import { ResultsTable } from "./results-table";
-import { ScorePanel } from "./score-panel";
 import { useToast } from "./toast";
 import { ConfirmModal } from "./confirm-modal";
-import { TableSkeleton, StatsSkeleton, ScanHistorySkeleton, OrgStatsSkeleton } from "./skeletons";
+import { TableSkeleton, StatsSkeleton, OrgStatsSkeleton } from "./skeletons";
 import { useTheme } from "./theme-provider";
 import { relativeTime } from "@/lib/relative-time";
+import { Tabs, TabList, TabTrigger, TabContent } from "./tabs";
+import { OverviewTab, RepositoriesTab, HistoryTab } from "./dashboard/index";
 
 interface Org {
   id: string;
@@ -85,16 +85,6 @@ interface CrossOrgResult {
   archived: boolean;
   scoreBreakdown: Record<string, number>;
 }
-
-const factorLabels: Record<string, string> = {
-  inactivity: "Inactivity",
-  criticalVulnerabilities: "Critical Vulns",
-  missingCodeowners: "Missing CODEOWNERS",
-  noBranchProtection: "No Branch Protection",
-  stalePRs: "Stale PRs",
-  noCI: "No CI",
-  notArchivedButInactive: "Inactive & Not Archived",
-};
 
 function RateLimitBadge({ rateLimit }: { rateLimit: RateLimitInfo | null }) {
   if (!rateLimit) return null;
@@ -210,60 +200,6 @@ function ScanProgress({ statusInfo, isScanning }: { statusInfo: ScanStatusInfo |
   );
 }
 
-function ScanHistoryPanel({
-  scans,
-  currentScanId,
-  onSelectScan,
-  loading,
-}: {
-  scans: ScanHistoryItem[];
-  currentScanId: string | null;
-  onSelectScan: (id: string) => void;
-  loading?: boolean;
-}) {
-  if (loading) return <ScanHistorySkeleton />;
-  if (scans.length === 0) return null;
-
-  return (
-    <div className="rounded-xl border border-border-default bg-surface-1 overflow-hidden" role="region" aria-label="Scan History">
-      <div className="px-4 py-2.5 border-b border-border-subtle">
-        <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Scan History</h3>
-      </div>
-      <div className="max-h-48 overflow-y-auto">
-        {scans.map((scan) => (
-          <button
-            key={scan.id}
-            onClick={() => onSelectScan(scan.id)}
-            className={`w-full text-left px-4 py-2.5 text-xs border-b border-border-subtle last:border-b-0 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50 ${
-              currentScanId === scan.id ? "bg-accent-subtle" : ""
-            }`}
-            aria-current={currentScanId === scan.id ? "true" : undefined}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${
-                    scan.status === "completed"
-                      ? "bg-success"
-                      : scan.status === "failed"
-                      ? "bg-danger"
-                      : "bg-warning"
-                  }`}
-                  aria-hidden="true"
-                />
-                <span className="text-text-secondary truncate">{relativeTime(scan.startedAt)}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-text-quaternary font-mono">{scan.repoCount} repos</span>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   return (
@@ -319,126 +255,6 @@ function RateLimitWarning({ rateLimit, repoEstimate, onProceed, onCancel }: {
         >
           Cancel
         </button>
-      </div>
-    </div>
-  );
-}
-
-function OrgStatsPanel({ stats }: { stats: OrgStats | null }) {
-  if (!stats || stats.totalRepos === 0) return null;
-
-  const maxFactorCount = stats.topRotFactors[0]?.count ?? 1;
-
-  return (
-    <div className="rounded-xl border border-border-default bg-surface-1 p-5 space-y-4" role="region" aria-label="Organization Statistics">
-      <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Org Health Overview</h3>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <p className="text-xs text-text-quaternary">Severe</p>
-          <p className="text-lg font-bold font-mono text-danger">{stats.severePct}%</p>
-        </div>
-        <div>
-          <p className="text-xs text-text-quaternary">Avg Score</p>
-          <p className="text-lg font-bold font-mono">{stats.avgScore}</p>
-        </div>
-        <div>
-          <p className="text-xs text-text-quaternary">Total Scans</p>
-          <p className="text-lg font-bold font-mono">{stats.totalScans}</p>
-        </div>
-      </div>
-      {stats.topRotFactors.length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-border-subtle">
-          <p className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Top Rot Factors</p>
-          {stats.topRotFactors.map((f) => (
-            <div key={f.factor} className="flex items-center gap-2">
-              <span className="text-xs text-text-tertiary w-36 truncate">{factorLabels[f.factor] ?? f.factor}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-surface-3 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-danger transition-all duration-500"
-                  style={{ width: `${(f.count / maxFactorCount) * 100}%` }}
-                />
-              </div>
-              <span className="text-xs text-text-quaternary font-mono w-10 text-right">{f.pct}%</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {stats.scoreDistribution.length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-border-subtle">
-          <p className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Score Distribution</p>
-          <div className="flex items-end gap-1 h-12">
-            {stats.scoreDistribution.map((d) => {
-              const maxCount = Math.max(...stats.scoreDistribution.map((x) => x.count), 1);
-              const h = Math.max((d.count / maxCount) * 100, 4);
-              return (
-                <div key={d.label} className="flex-1 flex flex-col items-center gap-1">
-                  <div
-                    className="w-full rounded-t bg-accent/60 transition-all duration-500"
-                    style={{ height: `${h}%` }}
-                    title={`${d.label}: ${d.count} repos`}
-                  />
-                  <span className="text-[9px] text-text-quaternary">{d.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ScanDiffPanel({ diff, onClose }: { diff: ScanDiff; onClose: () => void }) {
-  const statusColors: Record<string, string> = {
-    improved: "text-success",
-    worsened: "text-danger",
-    unchanged: "text-text-quaternary",
-    added: "text-accent",
-    removed: "text-warning",
-  };
-
-  return (
-    <div className="rounded-xl border border-border-default bg-surface-1 overflow-hidden animate-fade-in-up" role="region" aria-label="Scan Comparison">
-      <div className="px-4 py-2.5 border-b border-border-subtle flex items-center justify-between">
-        <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">
-          Scan Diff: {relativeTime(diff.scanA.startedAt)} vs {relativeTime(diff.scanB.startedAt)}
-        </h3>
-        <button onClick={onClose} className="text-text-quaternary hover:text-text-secondary transition-colors rounded p-0.5" aria-label="Close diff">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/></svg>
-        </button>
-      </div>
-      <div className="px-4 py-3 flex items-center gap-4 border-b border-border-subtle text-xs">
-        <span className="text-success font-medium">{diff.summary.improved} improved</span>
-        <span className="text-danger font-medium">{diff.summary.worsened} worsened</span>
-        <span className="text-text-quaternary">{diff.summary.unchanged} unchanged</span>
-        {diff.summary.added > 0 && <span className="text-accent">{diff.summary.added} added</span>}
-        {diff.summary.removed > 0 && <span className="text-warning">{diff.summary.removed} removed</span>}
-      </div>
-      <div className="max-h-64 overflow-y-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-border-subtle">
-              <th className="py-2 px-4 text-left text-text-quaternary font-semibold">Repo</th>
-              <th className="py-2 px-4 text-center text-text-quaternary font-semibold">Before</th>
-              <th className="py-2 px-4 text-center text-text-quaternary font-semibold">After</th>
-              <th className="py-2 px-4 text-center text-text-quaternary font-semibold">Delta</th>
-              <th className="py-2 px-4 text-center text-text-quaternary font-semibold">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {diff.diff.slice(0, 50).map((d) => (
-              <tr key={d.repoName} className="border-b border-border-subtle last:border-b-0">
-                <td className="py-2 px-4 text-text-secondary font-medium">{d.repoName}</td>
-                <td className="py-2 px-4 text-center font-mono text-text-tertiary">{d.scoreA ?? "—"}</td>
-                <td className="py-2 px-4 text-center font-mono text-text-tertiary">{d.scoreB ?? "—"}</td>
-                <td className={`py-2 px-4 text-center font-mono font-bold ${d.delta > 0 ? "text-danger" : d.delta < 0 ? "text-success" : "text-text-quaternary"}`}>
-                  {d.delta > 0 ? `+${d.delta}` : d.delta === 0 ? "—" : d.delta}
-                </td>
-                <td className={`py-2 px-4 text-center capitalize ${statusColors[d.status] ?? "text-text-quaternary"}`}>{d.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
@@ -523,7 +339,7 @@ function CrossOrgSearch({ onClose }: { onClose: () => void }) {
                   <td className="py-2 px-4 text-text-tertiary">{r.orgName}</td>
                   <td className={`py-2 px-4 text-center font-mono font-bold ${r.rotScore >= 10 ? "text-danger" : r.rotScore >= 7 ? "text-severe" : "text-success"}`}>{r.rotScore}</td>
                   <td className="py-2 px-4 text-center capitalize">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold uppercase border ${
                       r.severity === "severe" ? "bg-danger-subtle text-danger border-danger/20" :
                       r.severity === "high" ? "bg-severe-subtle text-severe border-severe/20" :
                       "bg-success-subtle text-success border-success/20"
@@ -575,6 +391,145 @@ function ConfettiEffect() {
   );
 }
 
+interface ActionsMenuProps {
+  showExport: boolean;
+  showShare: boolean;
+  showDelete: boolean;
+  shareToken: string | null;
+  shareLoading: boolean;
+  onExport: () => void;
+  onShare: () => void;
+  onRevokeShare: () => void;
+  onDelete: () => void;
+  orgName: string;
+}
+
+function ActionsMenu({
+  showExport,
+  showShare,
+  showDelete,
+  shareToken,
+  shareLoading,
+  onExport,
+  onShare,
+  onRevokeShare,
+  onDelete,
+  orgName,
+}: ActionsMenuProps) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const hasAnyAction = showExport || showShare || showDelete;
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  if (!hasAnyAction) return null;
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`rounded-lg p-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+          open 
+            ? "bg-surface-3 text-text-primary" 
+            : "text-text-tertiary hover:text-text-secondary hover:bg-surface-2"
+        }`}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Actions menu"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <circle cx="12" cy="5" r="1" fill="currentColor"/>
+          <circle cx="12" cy="12" r="1" fill="currentColor"/>
+          <circle cx="12" cy="19" r="1" fill="currentColor"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div 
+          className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border-default bg-surface-1 shadow-lg py-1 z-50 animate-fade-in"
+          role="menu"
+        >
+          {showExport && (
+            <button
+              onClick={() => { onExport(); setOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors"
+              role="menuitem"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Export CSV
+            </button>
+          )}
+
+          {showShare && (
+            <>
+              <button
+                onClick={() => { onShare(); setOpen(false); }}
+                disabled={shareLoading}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors disabled:opacity-50"
+                role="menuitem"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {shareLoading ? "Generating..." : shareToken ? "Copy Share Link" : "Share Results"}
+              </button>
+
+              {shareToken && (
+                <button
+                  onClick={() => { onRevokeShare(); setOpen(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-secondary hover:bg-surface-2 hover:text-danger transition-colors"
+                  role="menuitem"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M18.36 6.64A9 9 0 115.64 18.36 9 9 0 0118.36 6.64zM15 9l-6 6M9 9l6 6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Revoke Share Link
+                </button>
+              )}
+            </>
+          )}
+
+          {(showExport || showShare) && showDelete && (
+            <div className="my-1 border-t border-border-subtle" role="separator" />
+          )}
+
+          {showDelete && (
+            <button
+              onClick={() => { onDelete(); setOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-danger hover:bg-danger-subtle transition-colors"
+              role="menuitem"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Delete {orgName || "Organization"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MobileMenu({
   open,
   onClose,
@@ -612,7 +567,7 @@ function MobileMenu({
             <Image src={user.image} alt="" width={24} height={24} className="rounded-full" />
           )}
           <span className="text-sm text-text-secondary">{user.name}</span>
-          <span className={`px-1.5 py-0.5 rounded font-medium text-[10px] uppercase tracking-wider ${
+          <span className={`px-1.5 py-0.5 rounded font-medium text-xs uppercase tracking-wider ${
             plan === "pro" ? "bg-accent-subtle text-accent" : "bg-surface-3 text-text-quaternary"
           }`}>{plan}</span>
         </div>
@@ -666,25 +621,22 @@ export function Dashboard({
   const [lastScanTime, setLastScanTime] = useState<string | null>(null);
   const [rateLimitWarning, setRateLimitWarning] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [showCompare, setShowCompare] = useState(false);
   const [orgStats, setOrgStats] = useState<OrgStats | null>(null);
   const [orgStatsLoading, setOrgStatsLoading] = useState(false);
   const [showCrossOrgSearch, setShowCrossOrgSearch] = useState(false);
   const [scanDiff, setScanDiff] = useState<ScanDiff | null>(null);
-  const [diffScanA, setDiffScanA] = useState<string>("");
-  const [diffScanB, setDiffScanB] = useState<string>("");
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isFirstScan, setIsFirstScan] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [previousScores, setPreviousScores] = useState<Map<string, number>>(new Map());
-  const [showHistory, setShowHistory] = useState(false);
 
   const latestOrgIdRef = useRef(selectedOrgId);
   const sseRef = useRef<EventSource | null>(null);
   const lastRateLimitRefresh = useRef(0);
   const newlyAddedOrgIds = useRef<Set<string>>(new Set());
+  const setActiveTabRef = useRef<((tab: "overview" | "repositories" | "history") => void) | null>(null);
 
   useEffect(() => {
     latestOrgIdRef.current = selectedOrgId;
@@ -753,7 +705,6 @@ export function Dashboard({
       setScanHistory([]);
       setLastScanTime(null);
       setSelectedRows(new Set());
-      setShowCompare(false);
       setOrgStats(null);
       setScanDiff(null);
       setShareToken(null);
@@ -771,7 +722,6 @@ export function Dashboard({
       setScanHistory([]);
       setLastScanTime(null);
       setSelectedRows(new Set());
-      setShowCompare(false);
       setOrgStats(null);
       setScanDiff(null);
       setShareToken(null);
@@ -792,7 +742,6 @@ export function Dashboard({
       setScanHistory([]);
       setLastScanTime(null);
       setSelectedRows(new Set());
-      setShowCompare(false);
       setOrgStats(null);
       setScanDiff(null);
       setShareToken(null);
@@ -811,7 +760,6 @@ export function Dashboard({
     setError(null);
     setResultsLoading(true);
     setSelectedRows(new Set());
-    setShowCompare(false);
     setScanDiff(null);
     setShareToken(null);
 
@@ -1068,7 +1016,6 @@ export function Dashboard({
     setSelectedResult(null);
     setScanStatusInfo(null);
     setSelectedRows(new Set());
-    setShowCompare(false);
     setScanDiff(null);
 
     const hadPreviousScan = scanHistory.length > 0;
@@ -1171,7 +1118,6 @@ export function Dashboard({
     setResultsLoading(true);
     setSelectedResult(null);
     setSelectedRows(new Set());
-    setShowCompare(false);
     setScanDiff(null);
     setShareToken(null);
     try {
@@ -1182,6 +1128,8 @@ export function Dashboard({
         setScanStatus(data.scan.status);
         setResults(data.results);
         if (data.scan.completedAt) setLastScanTime(data.scan.completedAt);
+        // Navigate to repositories tab to show the loaded scan
+        setActiveTabRef.current?.("repositories");
       }
     } catch {
       setError("Failed to load scan results");
@@ -1190,10 +1138,10 @@ export function Dashboard({
     }
   }
 
-  async function loadScanDiff() {
-    if (!diffScanA || !diffScanB) return;
+  async function loadScanDiff(scanA: string, scanB: string) {
+    if (!scanA || !scanB) return;
     try {
-      const res = await fetch(`/api/scan/diff?scanA=${diffScanA}&scanB=${diffScanB}`);
+      const res = await fetch(`/api/scan/diff?scanA=${scanA}&scanB=${scanB}`);
       if (res.ok) {
         const data = await res.json();
         setScanDiff(data);
@@ -1264,8 +1212,6 @@ export function Dashboard({
           setShowCrossOrgSearch(false);
         } else if (scanDiff) {
           setScanDiff(null);
-        } else if (showCompare) {
-          setShowCompare(false);
         } else if (selectedResult) {
           setSelectedResult(null);
         } else if (mobileMenuOpen) {
@@ -1286,7 +1232,7 @@ export function Dashboard({
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [selectedResult, showCompare, scanDiff, showCrossOrgSearch, mobileMenuOpen]);
+  }, [selectedResult, scanDiff, showCrossOrgSearch, mobileMenuOpen]);
 
   function toggleRowSelection(repoName: string) {
     setSelectedRows((prev) => {
@@ -1309,15 +1255,6 @@ export function Dashboard({
     scanLoading || scanStatus === "running" || scanStatus === "queued";
 
   const severeCount = results.filter((r) => r.severity === "severe").length;
-  const highCount = results.filter((r) => r.severity === "high").length;
-  const avgScore = results.length
-    ? Math.round(results.reduce((sum, r) => sum + r.rotScore, 0) / results.length)
-    : 0;
-
-  const compareResults = useMemo(() => {
-    if (!showCompare || selectedRows.size < 2) return [];
-    return results.filter((r) => selectedRows.has(r.repoName));
-  }, [showCompare, selectedRows, results]);
 
   const orgName = orgs.find((o) => o.id === selectedOrgId)?.name;
 
@@ -1362,7 +1299,7 @@ export function Dashboard({
                 <Image src={user.image} alt="" width={20} height={20} className="rounded-full" />
               )}
               <span>{user.name}</span>
-              <span className={`px-1.5 py-0.5 rounded font-medium text-[10px] uppercase tracking-wider ${
+              <span className={`px-1.5 py-0.5 rounded font-medium text-xs uppercase tracking-wider ${
                 plan === "pro"
                   ? "bg-accent-subtle text-accent"
                   : "bg-surface-3 text-text-quaternary"
@@ -1454,173 +1391,159 @@ export function Dashboard({
           <CrossOrgSearch onClose={() => setShowCrossOrgSearch(false)} />
         )}
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="relative flex-1 sm:flex-none sm:w-56">
-            <label htmlFor="org-select" className="sr-only">Select organization</label>
-            <select
-              id="org-select"
-              value={selectedOrgId}
-              onChange={(e) => setSelectedOrgId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border-default bg-surface-1 px-3 py-2 pr-8 text-sm text-text-primary transition-colors hover:border-border-hover focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
-              aria-label="Select organization"
-            >
-              <option value="">Select organization...</option>
-              {orgs.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
-              ))}
-            </select>
-            <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-text-quaternary" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Org selector with add button */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <label htmlFor="org-select" className="sr-only">Select organization</label>
+              <select
+                id="org-select"
+                value={selectedOrgId}
+                onChange={(e) => setSelectedOrgId(e.target.value)}
+                className="appearance-none rounded-lg border border-border-default bg-surface-1 pl-3 pr-8 py-2 text-sm text-text-primary transition-colors hover:border-border-hover focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 min-w-[180px]"
+                aria-label="Select organization"
+              >
+                <option value="">Select organization...</option>
+                {orgs.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-text-quaternary" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowAddOrg(!showAddOrg)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border-hover bg-transparent px-3 py-2 text-xs font-medium text-text-secondary transition-all hover:border-accent/40 hover:text-accent hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              className={`rounded-lg p-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                showAddOrg 
+                  ? "bg-accent text-white" 
+                  : "border border-dashed border-border-hover text-text-tertiary hover:border-accent/40 hover:text-accent hover:bg-accent-subtle"
+              }`}
               aria-expanded={showAddOrg}
+              aria-label="Add organization"
+              title="Add organization"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" strokeLinecap="round"/>
               </svg>
-              + Add Organization
             </button>
-
-            <button
-              onClick={startScan}
-              disabled={!selectedOrgId || isScanning}
-              className="group inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0"
-              aria-label={isScanning ? "Scanning in progress" : "Start scan"}
-            >
-              {isScanning ? (
-                <>
-                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                  Scanning...
-                </>
-              ) : (
-                "Scan"
-              )}
-            </button>
-
-            {results.length > 0 && plan === "pro" && (
-              <button
-                onClick={exportCSV}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border-default bg-surface-2 px-3 py-2 text-xs font-medium text-text-secondary transition-all hover:bg-surface-3 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-label="Export results as CSV"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Export CSV
-              </button>
-            )}
-
-            {results.length > 0 && scanId && scanStatus === "completed" && (
-              <button
-                onClick={generateShareLink}
-                disabled={shareLoading}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border-default bg-surface-2 px-3 py-2 text-xs font-medium text-text-secondary transition-all hover:bg-surface-3 hover:text-text-primary disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-label={shareToken ? "Copy share link" : "Generate share link"}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                {shareLoading ? "Generating..." : shareToken ? "Copy Link" : "Share"}
-              </button>
-            )}
-
-            {shareToken && (
-              <button
-                onClick={revokeShareLink}
-                className="text-xs text-text-quaternary hover:text-danger transition-colors rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50"
-                aria-label="Revoke share link"
-              >
-                Revoke
-              </button>
-            )}
-
-            {selectedOrgId && (
-              <button
-                onClick={requestDeleteOrg}
-                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs text-text-quaternary transition-all hover:text-danger hover:bg-danger-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50"
-                aria-label={`Delete organization ${orgName}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Delete Org
-              </button>
-            )}
-
-            <ScanProgress statusInfo={scanStatusInfo} isScanning={isScanning} />
           </div>
+
+          {/* Right: Actions menu */}
+          <ActionsMenu
+            showExport={results.length > 0 && plan === "pro"}
+            showShare={results.length > 0 && scanId !== null && scanStatus === "completed"}
+            showDelete={!!selectedOrgId}
+            shareToken={shareToken}
+            shareLoading={shareLoading}
+            onExport={exportCSV}
+            onShare={generateShareLink}
+            onRevokeShare={revokeShareLink}
+            onDelete={requestDeleteOrg}
+            orgName={orgName}
+          />
         </div>
 
+        {/* Add Organization Panel */}
         {showAddOrg && (
-          <div className="animate-fade-in-up rounded-xl border border-border-default bg-surface-1 p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold">Add an organization</h2>
-                <p className="text-xs text-text-tertiary">
-                  Enter any GitHub organization name — public or private (if you have access).
-                </p>
+          <div className="animate-fade-in-up rounded-xl border border-accent/20 bg-gradient-to-b from-accent-subtle/50 to-surface-1 overflow-hidden">
+            <div className="px-5 py-4 border-b border-border-subtle bg-surface-1/50">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
+                      <path d="M19 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2M16 7a4 4 0 11-8 0 4 4 0 018 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Connect an Organization
+                  </h2>
+                  <p className="text-xs text-text-tertiary">
+                    Add any GitHub organization — public or private (if you have access)
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddOrg(false)}
+                  className="text-text-quaternary hover:text-text-secondary transition-colors rounded-lg p-1.5 hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 shrink-0"
+                  aria-label="Close"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => setShowAddOrg(false)}
-                className="text-text-quaternary hover:text-text-secondary transition-colors rounded-lg p-1 hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-label="Close add organization panel"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
-                </svg>
-              </button>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <label htmlFor="org-name-input" className="sr-only">Organization name</label>
-              <input
-                id="org-name-input"
-                type="text"
-                value={manualOrgName}
-                onChange={(e) => setManualOrgName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addOrgByName()}
-                placeholder="e.g. facebook, vercel, my-private-org..."
-                className="flex-1 rounded-lg border border-border-default bg-surface-0 px-3 py-2 text-sm placeholder-text-quaternary transition-colors focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
-                autoFocus
-              />
-              <button
-                onClick={addOrgByName}
-                disabled={orgLoading || !manualOrgName.trim()}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-              >
-                {orgLoading ? "Adding..." : "Add Organization"}
-              </button>
-            </div>
-            {availableOrgs.length > 0 && (
-              <div className="pt-3 border-t border-border-subtle">
-                <p className="text-xs text-text-tertiary mb-2">
-                  Or pick one you have access to:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {availableOrgs
-                    .filter((o) => !o.connected)
-                    .map((org) => (
-                      <button
-                        key={org.id}
-                        onClick={() => connectOrg(org)}
-                        disabled={orgLoading}
-                        className="inline-flex items-center gap-2 rounded-lg border border-border-default bg-surface-0 px-3 py-1.5 text-sm transition-all hover:border-accent/40 hover:bg-accent-subtle hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                      >
-                        {org.login}
-                      </button>
-                    ))}
+            
+            <div className="p-5 space-y-5">
+              {/* Manual input */}
+              <div className="space-y-2">
+                <label htmlFor="org-name-input" className="text-xs font-medium text-text-secondary">
+                  Organization name
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary text-sm">github.com/</span>
+                    <input
+                      id="org-name-input"
+                      type="text"
+                      value={manualOrgName}
+                      onChange={(e) => setManualOrgName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addOrgByName()}
+                      placeholder="organization-name"
+                      className="w-full rounded-lg border border-border-default bg-surface-0 pl-[5.5rem] pr-3 py-2.5 text-sm placeholder-text-quaternary transition-colors focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    onClick={addOrgByName}
+                    disabled={orgLoading || !manualOrgName.trim()}
+                    className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 whitespace-nowrap"
+                  >
+                    {orgLoading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        Adding...
+                      </span>
+                    ) : (
+                      "Connect"
+                    )}
+                  </button>
                 </div>
               </div>
-            )}
+
+              {/* Quick picks */}
+              {availableOrgs.filter((o) => !o.connected).length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-border-subtle" />
+                    <span className="text-xs font-medium text-text-quaternary uppercase tracking-wider">Your Organizations</span>
+                    <div className="h-px flex-1 bg-border-subtle" />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableOrgs
+                      .filter((o) => !o.connected)
+                      .map((org) => (
+                        <button
+                          key={org.id}
+                          onClick={() => connectOrg(org)}
+                          disabled={orgLoading}
+                          className="group inline-flex items-center gap-2 rounded-lg border border-border-default bg-surface-0 px-3 py-2 text-sm transition-all hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-50"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-quaternary group-hover:text-accent transition-colors" aria-hidden="true">
+                            <path d="M19 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2M16 7a4 4 0 11-8 0 4 4 0 018 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span className="text-text-secondary group-hover:text-accent transition-colors">{org.login}</span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1630,236 +1553,90 @@ export function Dashboard({
             <OrgStatsSkeleton />
             <TableSkeleton />
           </div>
-        ) : results.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up">
-              <div className="rounded-xl border border-border-default bg-surface-1 p-4 space-y-1">
-                <p className="text-xs font-medium text-text-tertiary uppercase tracking-wider">Repos</p>
-                <p className="text-2xl font-bold font-mono">{results.length}</p>
-              </div>
-              <div className="rounded-xl border border-border-default bg-surface-1 p-4 space-y-1">
-                <p className="text-xs font-medium text-text-tertiary uppercase tracking-wider">Avg Score</p>
-                <p className="text-2xl font-bold font-mono">{avgScore}</p>
-              </div>
-              <div className="rounded-xl border border-danger/20 bg-danger-subtle p-4 space-y-1">
-                <p className="text-xs font-medium text-danger/80 uppercase tracking-wider">Severe</p>
-                <p className="text-2xl font-bold font-mono text-danger">{severeCount}</p>
-              </div>
-              <div className="rounded-xl border border-severe/20 bg-severe-subtle p-4 space-y-1">
-                <p className="text-xs font-medium text-severe/80 uppercase tracking-wider">High</p>
-                <p className="text-2xl font-bold font-mono text-severe">{highCount}</p>
-              </div>
-            </div>
-
-            {orgStatsLoading ? (
-              <OrgStatsSkeleton />
-            ) : (
-              <OrgStatsPanel stats={orgStats} />
-            )}
-
-            {lastScanTime && (
-              <div className="flex items-center gap-2 text-xs text-text-quaternary">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" strokeLinecap="round"/>
-                </svg>
-                <span>Last scanned {relativeTime(lastScanTime)}</span>
-                {scanHistory.length > 1 && (
-                  <span className="text-text-quaternary">· {scanHistory.length} total scans</span>
-                )}
-              </div>
-            )}
-
-            {selectedRows.size > 0 && (
-              <div className="flex items-center gap-2 animate-fade-in" role="toolbar" aria-label="Bulk actions">
-                <span className="text-xs text-text-tertiary font-medium">{selectedRows.size} selected</span>
-                <button
-                  onClick={exportSubsetCSV}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded px-2 py-1"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Export selected
-                </button>
-                {selectedRows.size >= 2 && (
-                  <button
-                    onClick={() => setShowCompare(!showCompare)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded px-2 py-1"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {showCompare ? "Hide comparison" : "Compare"}
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedRows(new Set())}
-                  className="text-xs text-text-quaternary hover:text-text-secondary transition-colors rounded px-2 py-1"
-                >
-                  Clear
-                </button>
-              </div>
-            )}
-
-            {showCompare && compareResults.length >= 2 && (
-              <div className="animate-fade-in-up rounded-xl border border-border-default bg-surface-1 overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-border-subtle flex items-center justify-between">
-                  <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Comparison</h3>
-                  <button onClick={() => setShowCompare(false)} className="text-text-quaternary hover:text-text-secondary transition-colors rounded p-0.5" aria-label="Close comparison">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/></svg>
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border-subtle">
-                        <th className="text-left py-2 px-4 text-text-quaternary font-semibold">Factor</th>
-                        {compareResults.map((r) => (
-                          <th key={r.repoName} className="text-center py-2 px-4 text-text-secondary font-semibold min-w-[120px]">{r.repoName}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-border-subtle">
-                        <td className="py-2 px-4 text-text-tertiary">Total Score</td>
-                        {compareResults.map((r) => (
-                          <td key={r.repoName} className={`text-center py-2 px-4 font-mono font-bold ${r.rotScore >= 10 ? "text-danger" : r.rotScore >= 7 ? "text-severe" : "text-success"}`}>{r.rotScore}</td>
-                        ))}
-                      </tr>
-                      {Object.keys(compareResults[0].scoreBreakdown).map((key) => (
-                        <tr key={key} className="border-b border-border-subtle last:border-b-0">
-                          <td className="py-2 px-4 text-text-tertiary capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</td>
-                          {compareResults.map((r) => (
-                            <td key={r.repoName} className={`text-center py-2 px-4 font-mono ${r.scoreBreakdown[key] > 0 ? "text-danger" : "text-text-quaternary"}`}>+{r.scoreBreakdown[key]}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {scanDiff && (
-              <ScanDiffPanel diff={scanDiff} onClose={() => setScanDiff(null)} />
-            )}
-
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex-1 min-w-0 space-y-4">
-                <ResultsTable
-                  results={results}
-                  onSelect={setSelectedResult}
-                  selected={selectedResult}
-                  selectedRows={selectedRows}
-                  onToggleRow={toggleRowSelection}
-                  onSelectAll={selectAllRows}
-                  orgName={orgName}
-                  previousScores={previousScores}
-                />
-              </div>
-              {selectedResult && (
-                <ScorePanel
-                  result={selectedResult}
-                  onClose={() => setSelectedResult(null)}
-                  orgName={orgName}
-                />
-              )}
-            </div>
-
-            <div className="rounded-xl border border-border-default bg-surface-1 overflow-hidden">
-              <button
-                onClick={() => setShowHistory(!showHistory)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-surface-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50"
-                aria-expanded={showHistory}
-              >
-                <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">
-                  Scan History & Compare
-                  {scanHistory.length > 0 && (
-                    <span className="ml-2 text-text-quaternary font-mono normal-case">{scanHistory.length} scans</span>
-                  )}
-                </h3>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`text-text-quaternary transition-transform duration-200 ${showHistory ? "rotate-180" : ""}`}
-                  aria-hidden="true"
-                >
-                  <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              {showHistory && (
-                <div className="border-t border-border-subtle animate-fade-in">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:divide-x lg:divide-border-subtle">
-                    <div className="p-4">
-                      <ScanHistoryPanel
-                        scans={scanHistory}
-                        currentScanId={scanId}
-                        onSelectScan={loadHistoricalScan}
-                        loading={scanHistoryLoading}
-                      />
-                    </div>
-
-                    {completedScans.length >= 2 && (
-                      <div className="p-4 border-t border-border-subtle lg:border-t-0">
-                        <div className="space-y-3" role="region" aria-label="Scan Diff">
-                          <h3 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Compare Scans</h3>
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <select
-                              value={diffScanA}
-                              onChange={(e) => setDiffScanA(e.target.value)}
-                              className="flex-1 rounded-lg border border-border-default bg-surface-0 px-3 py-1.5 text-xs text-text-secondary focus:outline-none focus:border-accent/50"
-                              aria-label="Select first scan to compare"
-                            >
-                              <option value="">Older scan...</option>
-                              {completedScans.map((s) => (
-                                <option key={s.id} value={s.id}>{relativeTime(s.startedAt)} ({s.repoCount} repos)</option>
-                              ))}
-                            </select>
-                            <select
-                              value={diffScanB}
-                              onChange={(e) => setDiffScanB(e.target.value)}
-                              className="flex-1 rounded-lg border border-border-default bg-surface-0 px-3 py-1.5 text-xs text-text-secondary focus:outline-none focus:border-accent/50"
-                              aria-label="Select second scan to compare"
-                            >
-                              <option value="">Newer scan...</option>
-                              {completedScans.map((s) => (
-                                <option key={s.id} value={s.id}>{relativeTime(s.startedAt)} ({s.repoCount} repos)</option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={loadScanDiff}
-                              disabled={!diffScanA || !diffScanB || diffScanA === diffScanB}
-                              className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                            >
-                              Compare
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 min-w-0">
-              <ResultsTable
+          <Tabs defaultTab="overview" onTabChange={(_tab, setTab) => { setActiveTabRef.current = setTab; }}>
+            <TabList className="mb-6">
+              <TabTrigger 
+                value="overview"
+                icon={
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                }
+              >
+                Overview
+              </TabTrigger>
+              <TabTrigger 
+                value="repositories"
+                badge={results.length > 0 ? severeCount : undefined}
+                icon={
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                }
+              >
+                Repositories
+              </TabTrigger>
+              <TabTrigger 
+                value="history"
+                badge={scanHistory.length > 0 ? scanHistory.length : undefined}
+                icon={
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                }
+              >
+                History
+              </TabTrigger>
+            </TabList>
+
+            <TabContent value="overview">
+              <OverviewTab
                 results={results}
-                onSelect={setSelectedResult}
-                selected={selectedResult}
+                orgStats={orgStats}
+                orgStatsLoading={orgStatsLoading}
+                lastScanTime={lastScanTime}
+                scanStatusInfo={scanStatusInfo}
+                isScanning={isScanning}
                 onStartScan={selectedOrgId && !isScanning ? startScan : undefined}
+                relativeTime={relativeTime}
+              />
+            </TabContent>
+
+            <TabContent value="repositories">
+              <RepositoriesTab
+                results={results}
+                selectedResult={selectedResult}
+                onSelectResult={setSelectedResult}
                 selectedRows={selectedRows}
                 onToggleRow={toggleRowSelection}
                 onSelectAll={selectAllRows}
-                orgName={orgName}
+                orgName={orgName ?? ""}
+                previousScores={previousScores}
+                resultsLoading={resultsLoading}
+                isScanning={isScanning}
+                onStartScan={selectedOrgId && !isScanning ? startScan : undefined}
+                onExportSelected={exportSubsetCSV}
               />
-            </div>
-          </div>
+            </TabContent>
+
+            <TabContent value="history">
+              <HistoryTab
+                scanHistory={scanHistory}
+                scanHistoryLoading={scanHistoryLoading}
+                currentScanId={scanId}
+                onSelectScan={loadHistoricalScan}
+                completedScans={completedScans}
+                scanDiff={scanDiff}
+                onLoadDiff={loadScanDiff}
+                onCloseDiff={() => setScanDiff(null)}
+                relativeTime={relativeTime}
+              />
+            </TabContent>
+          </Tabs>
         )}
 
-        <footer className="flex items-center justify-center gap-4 py-4 text-[10px] text-text-quaternary" role="contentinfo">
+        <footer className="flex items-center justify-center gap-4 py-4 text-xs text-text-quaternary" role="contentinfo">
           <span title="Press / to focus search">
             <kbd className="px-1.5 py-0.5 rounded border border-border-default bg-surface-2 font-mono">/</kbd> Search
           </span>

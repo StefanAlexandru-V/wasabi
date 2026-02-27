@@ -132,13 +132,16 @@ describe("Dashboard", () => {
     expect(screen.getByText("another-org")).toBeInTheDocument();
   });
 
-  it("renders scan button", () => {
+  it("renders scan button in quality gate when org selected", async () => {
     setupFetchMock({
       "/api/orgs": { available: [], connected: [] },
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    expect(screen.getByText("Scan")).toBeInTheDocument();
+    // When org is selected but no scan yet, shows "Start Scan" in quality gate
+    await waitFor(() => {
+      expect(screen.getByText("Start Scan")).toBeInTheDocument();
+    });
   });
 
   it("shows add org panel when no orgs exist", () => {
@@ -146,7 +149,7 @@ describe("Dashboard", () => {
       "/api/orgs": { available: [], connected: [] },
     });
     renderDashboard({ orgs: [] });
-    expect(screen.getByText("Add an organization")).toBeInTheDocument();
+    expect(screen.getByText("Connect an Organization")).toBeInTheDocument();
   });
 
   it("toggles add org panel", async () => {
@@ -156,23 +159,30 @@ describe("Dashboard", () => {
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    expect(screen.queryByText("Add an organization")).not.toBeInTheDocument();
-    await user.click(screen.getByText("+ Add Organization"));
-    expect(screen.getByText("Add an organization")).toBeInTheDocument();
+    expect(screen.queryByText("Connect an Organization")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Add organization"));
+    expect(screen.getByText("Connect an Organization")).toBeInTheDocument();
   });
 
   it("renders empty state message in results table", async () => {
+    const user = userEvent.setup();
     setupFetchMock({
       "/api/orgs": { available: [], connected: [] },
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
+    // Wait for tabs to render, then navigate to Repositories tab
+    await waitFor(() => {
+      expect(screen.getByText("Repositories")).toBeInTheDocument();
+    });
+    await user.click(screen.getByText("Repositories"));
     await waitFor(() => {
       expect(screen.getByText(/No scan results yet/)).toBeInTheDocument();
     });
   });
 
   it("shows export CSV button only for pro plan with results", async () => {
+    const user = userEvent.setup();
     const scanResults = [
       {
         rank: 1,
@@ -193,9 +203,12 @@ describe("Dashboard", () => {
     });
     renderDashboard({ plan: "pro" });
 
+    // Wait for results to load, then open actions menu
     await waitFor(() => {
-      expect(screen.getByText("Export CSV")).toBeInTheDocument();
+      expect(screen.getByLabelText("Actions menu")).toBeInTheDocument();
     });
+    await user.click(screen.getByLabelText("Actions menu"));
+    expect(screen.getByText("Export CSV")).toBeInTheDocument();
   });
 
   it("displays scan progress when scan is active", async () => {
@@ -215,7 +228,7 @@ describe("Dashboard", () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText("Scanning...")).toBeInTheDocument();
+      expect(screen.getByText("Scanning in progress")).toBeInTheDocument();
     });
   });
 
@@ -232,7 +245,7 @@ describe("Dashboard", () => {
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    await user.click(screen.getByText("+ Add Organization"));
+    await user.click(screen.getByLabelText("Add organization"));
 
     await waitFor(() => {
       expect(screen.getByText("cool-org")).toBeInTheDocument();
@@ -258,13 +271,14 @@ describe("Dashboard", () => {
     expect(screen.getByText("Repo Rot Detector")).toBeInTheDocument();
   });
 
-  it("disables scan button when no org is selected", () => {
+  it("shows ready to scan state when no org selected", () => {
     setupFetchMock({
       "/api/orgs": { available: [], connected: [] },
     });
     renderDashboard({ orgs: [] });
-    const scanButton = screen.getByText("Scan");
-    expect(scanButton).toBeDisabled();
+    // Quality gate shows "Ready to scan" state - no scan button without org selected
+    expect(screen.getByText("Ready to scan")).toBeInTheDocument();
+    expect(screen.getByText("Run your first scan to check organization health")).toBeInTheDocument();
   });
 
   it("opens delete confirmation modal", async () => {
@@ -274,7 +288,9 @@ describe("Dashboard", () => {
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    await user.click(screen.getByText("Delete Org"));
+    // Open actions menu first, then click delete
+    await user.click(screen.getByLabelText("Actions menu"));
+    await user.click(screen.getByText(/Delete test-org/));
     expect(screen.getByText(/Delete "test-org"/)).toBeInTheDocument();
     expect(screen.getByText("Delete Organization")).toBeInTheDocument();
     expect(screen.getByText("Cancel")).toBeInTheDocument();
@@ -287,7 +303,9 @@ describe("Dashboard", () => {
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    await user.click(screen.getByText("Delete Org"));
+    // Open actions menu first, then click delete
+    await user.click(screen.getByLabelText("Actions menu"));
+    await user.click(screen.getByText(/Delete test-org/));
     await user.click(screen.getByText("Cancel"));
     expect(screen.queryByText(/Delete "test-org"/)).not.toBeInTheDocument();
   });

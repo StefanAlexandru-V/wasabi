@@ -67,10 +67,12 @@ export async function GET(
 
     const factorTotals: Record<string, number> = {};
     for (const s of scores) {
-      const breakdown = s.scoreBreakdown as Record<string, number>;
-      for (const [key, value] of Object.entries(breakdown)) {
-        if (value > 0) {
-          factorTotals[key] = (factorTotals[key] ?? 0) + 1;
+      const breakdown = (s.scoreBreakdown ?? {}) as Record<string, number>;
+      if (breakdown && typeof breakdown === "object") {
+        for (const [key, value] of Object.entries(breakdown)) {
+          if (value > 0) {
+            factorTotals[key] = (factorTotals[key] ?? 0) + 1;
+          }
         }
       }
     }

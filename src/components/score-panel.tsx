@@ -88,7 +88,7 @@ export function ScorePanel({
                 {result.severity}
               </span>
               {result.archived && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
+                <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
               )}
             </div>
           </div>
@@ -148,7 +148,7 @@ export function ScorePanel({
             <h4 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Score Breakdown</h4>
             <button
               onClick={copyBreakdown}
-              className="inline-flex items-center gap-1 text-[10px] text-text-quaternary hover:text-text-secondary transition-colors px-1.5 py-0.5 rounded hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              className="inline-flex items-center gap-1 text-xs text-text-quaternary hover:text-text-secondary transition-colors px-1.5 py-0.5 rounded hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               aria-label="Copy score breakdown as JSON"
               title="Copy as JSON"
             >

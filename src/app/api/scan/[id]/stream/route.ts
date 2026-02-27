@@ -30,14 +30,27 @@ export async function GET(
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        let closed = false;
+
+        function closeStream() {
+          if (!closed) {
+            closed = true;
+            controller.close();
+          }
+        }
+
         function send(data: Record<string, unknown>) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          if (!closed) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          }
         }
 
         let lastStatus = "";
         let lastProcessed = -1;
 
         const poll = async () => {
+          if (closed) return false;
+
           try {
             const current = await prisma.scan.findUnique({
               where: { id },
@@ -53,7 +66,7 @@ export async function GET(
 
             if (!current) {
               send({ type: "error", message: "Scan not found" });
-              controller.close();
+              closeStream();
               return false;
             }
 
@@ -73,13 +86,13 @@ export async function GET(
 
             if (current.status === "completed" || current.status === "failed") {
               send({ type: "done", status: current.status, repoCount: current.repoCount });
-              controller.close();
+              closeStream();
               return false;
             }
 
             return true;
           } catch {
-            controller.close();
+            closeStream();
             return false;
           }
         };
@@ -94,10 +107,8 @@ export async function GET(
 
         setTimeout(() => {
           clearInterval(interval);
-          try {
-            send({ type: "timeout" });
-            controller.close();
-          } catch {}
+          send({ type: "timeout" });
+          closeStream();
         }, 300_000);
       },
     });
