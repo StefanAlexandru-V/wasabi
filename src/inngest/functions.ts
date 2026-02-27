@@ -177,17 +177,21 @@ export const scanRun = inngest.createFunction(
       });
     }
 
-    await step.run("mark-completed", async () => {
+    const finalCount = await step.run("mark-completed", async () => {
+      const scoreCount = await prisma.repoScore.count({
+        where: { scanId },
+      });
       await prisma.scan.update({
         where: { id: scanId },
         data: {
           status: "completed",
           completedAt: new Date(),
-          repoCount: processedCount,
+          repoCount: scoreCount,
         },
       });
+      return scoreCount;
     });
 
-    return { success: true, repoCount: processedCount, errors: errors.length > 0 ? errors : undefined };
+    return { success: true, repoCount: finalCount, errors: errors.length > 0 ? errors : undefined };
   }
 );

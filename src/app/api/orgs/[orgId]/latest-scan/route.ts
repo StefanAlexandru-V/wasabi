@@ -56,6 +56,8 @@ export async function GET(
           startedAt: activeScan.startedAt,
           completedAt: null,
           repoCount: activeScan.repoCount,
+          totalRepoCount: activeScan.totalRepoCount,
+          processedRepoCount: activeScan.processedRepoCount,
         },
         results,
       });
