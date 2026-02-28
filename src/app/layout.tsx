@@ -15,23 +15,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Repo Rot Detector",
-  description: "Rank GitHub repositories by rot risk within an organization",
+  title: "Wasabi",
+  description: "Find the rust in your repositories",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
     ],
   },
   openGraph: {
-    title: "Repo Rot Detector",
-    description: "Find neglected repositories, surface hidden risks, and keep your GitHub organization healthy.",
+    title: "Wasabi",
+    description: "Find the rust in your repositories. Surface neglected repos and keep your GitHub organization healthy.",
     type: "website",
-    siteName: "Repo Rot Detector",
+    siteName: "Wasabi",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Repo Rot Detector",
-    description: "Find neglected repositories, surface hidden risks, and keep your GitHub organization healthy.",
+    title: "Wasabi",
+    description: "Find the rust in your repositories. Surface neglected repos and keep your GitHub organization healthy.",
   },
 };
 

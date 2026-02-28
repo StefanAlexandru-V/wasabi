@@ -268,7 +268,7 @@ describe("Dashboard", () => {
       "/latest-scan": { scan: null, results: [] },
     });
     renderDashboard();
-    expect(screen.getByText("Repo Rot Detector")).toBeInTheDocument();
+    expect(screen.getByText("Wasabi")).toBeInTheDocument();
   });
 
   it("shows ready to scan state when no org selected", () => {

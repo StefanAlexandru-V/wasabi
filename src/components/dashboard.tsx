@@ -264,7 +264,8 @@ function CrossOrgSearch({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState<string>("");
   const [results, setResults] = useState<CrossOrgResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const doSearch = useCallback((q: string, sev: string) => {
@@ -276,14 +277,24 @@ function CrossOrgSearch({ onClose }: { onClose: () => void }) {
       .then((r) => r.ok ? r.json() : { results: [] })
       .then((data) => setResults(data.results ?? []))
       .catch(() => setResults([]))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setInitialLoaded(true);
+      });
   }, []);
 
+  // Load all results on mount
   useEffect(() => {
+    doSearch("", "");
+  }, [doSearch]);
+
+  // Debounced search on query/severity change
+  useEffect(() => {
+    if (!initialLoaded) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(query, severity), 300);
     return () => clearTimeout(debounceRef.current);
-  }, [query, severity, doSearch]);
+  }, [query, severity, doSearch, initialLoaded]);
 
   return (
     <div className="rounded-xl border border-border-default bg-surface-1 overflow-hidden animate-fade-in-up" role="dialog" aria-label="Search across all organizations">
@@ -317,10 +328,10 @@ function CrossOrgSearch({ onClose }: { onClose: () => void }) {
       </div>
       <div className="max-h-64 overflow-y-auto">
         {loading ? (
-          <div className="p-4 text-center text-text-quaternary text-xs animate-pulse">Searching...</div>
+          <div className="p-4 text-center text-text-quaternary text-xs animate-pulse">Loading...</div>
         ) : results.length === 0 ? (
           <div className="p-4 text-center text-text-quaternary text-xs">
-            {query ? "No results found." : "Start typing to search across all organizations."}
+            {query || severity ? "No results found." : "No scan data available. Run a scan first."}
           </div>
         ) : (
           <table className="w-full text-xs">
@@ -885,7 +896,7 @@ export function Dashboard({
             if (document.hidden) {
               try {
                 if ("Notification" in window && Notification.permission === "granted") {
-                  new Notification("Repo Rot Detector", {
+                  new Notification("Wasabi", {
                     body: `Scan complete — ${data.repoCount ?? 0} repos analyzed`,
                     icon: "/favicon.svg",
                   });
@@ -1000,7 +1011,7 @@ export function Dashboard({
   }
 
   async function startScan() {
-    if (!selectedOrgId) return;
+    if (!selectedOrgId || selectedOrgId.startsWith("temp-")) return;
 
     if (rateLimit && rateLimit.remaining < 500 && !rateLimitWarning) {
       setRateLimitWarning(true);
@@ -1256,7 +1267,7 @@ export function Dashboard({
 
   const severeCount = results.filter((r) => r.severity === "severe").length;
 
-  const orgName = orgs.find((o) => o.id === selectedOrgId)?.name;
+  const orgName = orgs.find((o) => o.id === selectedOrgId)?.name ?? "";
 
   const completedScans = scanHistory.filter((s) => s.status === "completed");
 
@@ -1268,11 +1279,13 @@ export function Dashboard({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 h-14">
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-2 border border-border-default">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent" aria-hidden="true">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="7" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 1.5" opacity="0.8"/>
+                <path d="M9 9l1.5 1.5M15 9l-1.5 1.5M9 15l1.5-1.5M15 15l-1.5-1.5" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                <circle cx="12" cy="12" r="1.5" fill="#f59e0b"/>
               </svg>
             </div>
-            <h1 className="text-sm font-semibold tracking-tight">Repo Rot Detector</h1>
+            <h1 className="text-sm font-semibold tracking-tight">Wasabi</h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -1598,7 +1611,7 @@ export function Dashboard({
                 lastScanTime={lastScanTime}
                 scanStatusInfo={scanStatusInfo}
                 isScanning={isScanning}
-                onStartScan={selectedOrgId && !isScanning ? startScan : undefined}
+                onStartScan={selectedOrgId && !selectedOrgId.startsWith("temp-") && !isScanning ? startScan : undefined}
                 relativeTime={relativeTime}
               />
             </TabContent>
@@ -1611,11 +1624,11 @@ export function Dashboard({
                 selectedRows={selectedRows}
                 onToggleRow={toggleRowSelection}
                 onSelectAll={selectAllRows}
-                orgName={orgName ?? ""}
+                orgName={orgName}
                 previousScores={previousScores}
                 resultsLoading={resultsLoading}
                 isScanning={isScanning}
-                onStartScan={selectedOrgId && !isScanning ? startScan : undefined}
+                onStartScan={selectedOrgId && !selectedOrgId.startsWith("temp-") && !isScanning ? startScan : undefined}
                 onExportSelected={exportSubsetCSV}
               />
             </TabContent>

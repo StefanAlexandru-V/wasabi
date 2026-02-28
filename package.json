@@ -1,6 +1,7 @@
 {
-  "name": "repo-rot-detector",
+  "name": "wasabi",
   "version": "0.1.0",
+  "description": "Find the rust in your repositories",
   "private": true,
   "scripts": {
     "dev": "next dev",

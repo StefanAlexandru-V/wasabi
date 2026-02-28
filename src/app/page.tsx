@@ -20,10 +20,12 @@ export default async function Home() {
         <div className="relative z-10 flex flex-col items-center space-y-8 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-2">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent to-accent/60 opacity-20 blur-sm" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 opacity-20 blur-sm" />
               <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 border border-border-default">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-accent">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="7" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 1.5" opacity="0.8"/>
+                  <path d="M9 9l1.5 1.5M15 9l-1.5 1.5M9 15l1.5-1.5M15 15l-1.5-1.5" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                  <circle cx="12" cy="12" r="1.5" fill="#f59e0b"/>
                 </svg>
               </div>
             </div>
@@ -31,10 +33,10 @@ export default async function Home() {
 
           <div className="text-center space-y-3 max-w-lg">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gradient leading-tight">
-              Repo Rot Detector
+              Wasabi
             </h1>
             <p className="text-text-secondary text-base sm:text-lg leading-relaxed max-w-md mx-auto">
-              Find neglected repositories, surface hidden risks, and keep your GitHub organization healthy.
+              Find the rust in your repositories. Surface neglected repos and keep your GitHub organization healthy.
             </p>
           </div>
 

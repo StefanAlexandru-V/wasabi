@@ -8,11 +8,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await params;
   return {
-    title: `Shared Scan Report — Repo Rot Detector`,
+    title: `Shared Scan Report — Wasabi`,
     description: "View the shared repository health scan report.",
     robots: { index: false, follow: false },
     openGraph: {
-      title: "Repo Rot Detector — Shared Report",
+      title: "Wasabi — Shared Report",
       description: "View the shared repository health scan report.",
     },
   };
