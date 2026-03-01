@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { ResultsTable } from "../results-table";
 import { ScorePanel } from "../score-panel";
 import { TableSkeleton } from "../skeletons";
@@ -39,6 +39,16 @@ export function RepositoriesTab({
     return results.filter((r) => selectedRows.has(r.repoName)).slice(0, 5);
   }, [results, selectedRows]);
 
+  // Lock body scroll when mobile modal is open
+  useEffect(() => {
+    if (selectedResult && window.innerWidth < 1024) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [selectedResult]);
+
   if (resultsLoading && results.length === 0) {
     return <TableSkeleton />;
   }
@@ -63,7 +73,7 @@ export function RepositoriesTab({
       )}
 
       {/* Main Table + Detail Panel */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
         <div className="flex-1 min-w-0">
           <ResultsTable
             results={results}
@@ -77,13 +87,65 @@ export function RepositoriesTab({
             previousScores={previousScores}
           />
         </div>
+        
+        {/* Desktop: Side panel */}
         {selectedResult && (
-          <ScorePanel
-            result={selectedResult}
-            onClose={() => onSelectResult(null)}
-            orgName={orgName}
-          />
+          <div className="hidden lg:block lg:sticky lg:top-20">
+            <ScorePanel
+              result={selectedResult}
+              onClose={() => onSelectResult(null)}
+              orgName={orgName}
+            />
+          </div>
         )}
+      </div>
+
+      {/* Mobile: Bottom sheet modal */}
+      {selectedResult && (
+        <MobileScoreModal
+          result={selectedResult}
+          onClose={() => onSelectResult(null)}
+          orgName={orgName}
+        />
+      )}
+    </div>
+  );
+}
+
+// Mobile bottom sheet modal
+function MobileScoreModal({
+  result,
+  onClose,
+  orgName,
+}: {
+  result: ScanResult;
+  onClose: () => void;
+  orgName: string;
+}) {
+  return (
+    <div className="lg:hidden fixed inset-0 z-[70]">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-surface-0/80 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Sheet */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-surface-1 border-t border-border-default shadow-2xl animate-slide-up"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Score details for ${result.repoName}`}
+      >
+        {/* Drag handle */}
+        <div className="sticky top-0 flex justify-center py-3 bg-surface-1 border-b border-border-subtle">
+          <div className="w-10 h-1 rounded-full bg-surface-4" />
+        </div>
+        <ScorePanel
+          result={result}
+          onClose={onClose}
+          orgName={orgName}
+        />
       </div>
     </div>
   );

@@ -71,9 +71,10 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
   if (status === "unknown") {
     return (
       <div className="rounded-xl border border-border-default bg-surface-1 p-6 text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-3 text-text-tertiary">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4" strokeLinecap="round" strokeLinejoin="round"/>
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-3 text-wasabi">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 4c-5 5-9 10-9 16a9 9 0 0018 0c0-6-4-11-9-16z" fill="currentColor" opacity="0.85"/>
+            <path d="M16 8v14M13 13l3-2 3 2M13 17.5l3-1.5 3 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.35"/>
           </svg>
         </div>
         <div className="space-y-1">
@@ -86,7 +87,7 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
           <button
             onClick={onStartScan}
             disabled={isScanning}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white font-medium text-sm transition-all hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-on-color font-medium text-sm transition-all hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
           >
             {isScanning ? (
               <>
@@ -142,14 +143,14 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
       className={`
         rounded-xl border p-5 transition-all
         ${isPassing 
-          ? "border-success/20 bg-gradient-to-br from-success-subtle to-transparent" 
-          : "border-danger/20 bg-gradient-to-br from-danger-subtle to-transparent"
+          ? "border-success/30 bg-success-subtle" 
+          : "border-danger/30 bg-danger-subtle"
         }
       `}
       role="region"
       aria-label="Quality gate status"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className={`
             flex items-center justify-center w-10 h-10 rounded-full shrink-0
@@ -166,7 +167,7 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
             )}
           </div>
           <div className="space-y-0.5">
-            <h3 className={`text-lg font-semibold ${isPassing ? "text-success" : "text-danger"}`}>
+            <h3 className={`text-lg font-semibold text-text-primary`}>
               Quality Gate {isPassing ? "Passed" : "Failed"}
             </h3>
             <p className="text-sm text-text-secondary">{reason}</p>
@@ -176,7 +177,7 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
           <button
             onClick={onStartScan}
             disabled={isScanning}
-            className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
+            className={`w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
               isPassing
                 ? "border border-border-default bg-surface-2 text-text-secondary hover:bg-surface-3 hover:text-text-primary focus-visible:ring-accent/50"
                 : "bg-danger text-white hover:brightness-110 focus-visible:ring-danger/50"
@@ -205,30 +206,32 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, metri
 
       {/* Quality Gate Criteria */}
       {gates && (
-        <div className="mt-4 pt-4 border-t border-border-subtle">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-5 pt-5 border-t border-border-subtle">
+          <div className="flex flex-col gap-3">
             {gates.map((gate) => (
               <div 
                 key={gate.label}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                  gate.passing ? "bg-success/5" : "bg-danger/5"
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border ${
+                  gate.passing 
+                    ? "bg-success-subtle border-success/20" 
+                    : "bg-danger-subtle border-danger/20"
                 }`}
               >
                 {gate.passing ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-success shrink-0" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-success shrink-0" aria-hidden="true">
                     <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-danger shrink-0" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-danger shrink-0" aria-hidden="true">
                     <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium truncate ${gate.passing ? "text-success" : "text-danger"}`}>
+                  <p className="text-sm font-medium text-text-primary">
                     {gate.label}
                   </p>
-                  <p className="text-xs text-text-tertiary truncate" title={gate.description}>
-                    Current: <span className="font-mono font-medium">{gate.value}</span>
+                  <p className="text-sm text-text-tertiary mt-0.5">
+                    Current: <span className={`font-mono font-semibold ${gate.passing ? "text-success" : "text-danger"}`}>{gate.value}</span>
                   </p>
                 </div>
               </div>

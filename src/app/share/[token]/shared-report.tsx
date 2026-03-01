@@ -103,19 +103,18 @@ export function SharedReport({ token }: { token: string }) {
   return (
     <div className="min-h-screen bg-surface-0 animate-fade-in">
       <header className="border-b border-border-default bg-surface-0/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl flex items-center justify-between px-4 sm:px-6 h-14">
-          <div className="flex items-center gap-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-2 border border-border-default">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="7" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 1.5" opacity="0.8"/>
-                <path d="M9 9l1.5 1.5M15 9l-1.5 1.5M9 15l1.5-1.5M15 15l-1.5-1.5" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
-                <circle cx="12" cy="12" r="1.5" fill="#f59e0b"/>
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:h-14">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-2 border border-border-default shrink-0">
+              <svg width="14" height="14" viewBox="0 0 32 32" fill="none" className="text-wasabi">
+                <path d="M16 4c-5 5-9 10-9 16a9 9 0 0018 0c0-6-4-11-9-16z" fill="currentColor" opacity="0.85"/>
+                <path d="M16 8v14M13 13l3-2 3 2M13 17.5l3-1.5 3 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.35"/>
               </svg>
             </div>
             <h1 className="text-sm font-semibold tracking-tight">Wasabi</h1>
-            <span className="text-xs px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">Shared Report</span>
+            <span className="text-xs px-2 py-0.5 rounded-md bg-accent-subtle text-accent border border-accent/20 font-medium">Shared Report</span>
           </div>
-          <div className="text-xs text-text-tertiary">
+          <div className="text-xs text-text-tertiary truncate">
             {data.orgName} &middot; {data.scan.repoCount} repos &middot; {data.scan.completedAt ? relativeTime(data.scan.completedAt) : "N/A"}
           </div>
         </div>

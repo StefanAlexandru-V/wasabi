@@ -147,9 +147,9 @@ interface KPICardProps {
 function KPICard({ label, value, subtitle, variant = "default", icon }: KPICardProps) {
   const variants = {
     default: "border-border-default bg-surface-1",
-    danger: "border-danger/20 bg-danger-subtle",
-    severe: "border-severe/20 bg-severe-subtle",
-    success: "border-success/20 bg-success-subtle",
+    danger: "border-danger/30 bg-danger-subtle",
+    severe: "border-severe/30 bg-severe-subtle",
+    success: "border-success/30 bg-success-subtle",
   };
 
   const textVariants = {
@@ -161,16 +161,16 @@ function KPICard({ label, value, subtitle, variant = "default", icon }: KPICardP
 
   const iconVariants = {
     default: "text-text-tertiary",
-    danger: "text-danger/60",
-    severe: "text-severe/60",
-    success: "text-success/60",
+    danger: "text-danger",
+    severe: "text-severe",
+    success: "text-success",
   };
 
   return (
     <div className={`rounded-xl border p-4 space-y-2 ${variants[variant]}`}>
       <div className="flex items-center gap-2">
         {icon && <span className={iconVariants[variant]}>{icon}</span>}
-        <p className={`text-xs font-medium uppercase tracking-wider ${variant === "default" ? "text-text-tertiary" : `${textVariants[variant]}/70`}`}>
+        <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
           {label}
         </p>
       </div>
@@ -199,36 +199,36 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
         {/* Quick Stats Row */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-text-quaternary mb-0.5">Severe %</p>
-            <p className="text-xl font-bold font-mono text-danger">{stats.severePct}%</p>
+            <p className="text-xs text-text-tertiary mb-0.5">Severe %</p>
+            <p className="text-xl font-bold font-mono text-text-primary">{stats.severePct}%</p>
           </div>
           <div>
-            <p className="text-xs text-text-quaternary mb-0.5">Avg Score</p>
-            <p className="text-xl font-bold font-mono">{stats.avgScore}</p>
+            <p className="text-xs text-text-tertiary mb-0.5">Avg Score</p>
+            <p className="text-xl font-bold font-mono text-text-primary">{stats.avgScore}</p>
           </div>
           <div>
-            <p className="text-xs text-text-quaternary mb-0.5">Total Scans</p>
-            <p className="text-xl font-bold font-mono">{stats.totalScans}</p>
+            <p className="text-xs text-text-tertiary mb-0.5">Total Scans</p>
+            <p className="text-xl font-bold font-mono text-text-primary">{stats.totalScans}</p>
           </div>
         </div>
 
         {/* Top Rot Factors */}
         {stats.topRotFactors.length > 0 && (
           <div className="space-y-3 pt-4 border-t border-border-subtle">
-            <h4 className="text-xs font-semibold text-text-quaternary uppercase tracking-wider">Top Rot Factors</h4>
+            <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Top Rot Factors</h4>
             <div className="space-y-2">
               {stats.topRotFactors.map((f) => (
                 <div key={f.factor} className="flex items-center gap-3">
-                  <span className="text-xs text-text-tertiary w-32 truncate" title={factorLabels[f.factor] ?? f.factor}>
+                  <span className="text-sm text-text-secondary w-32 truncate" title={factorLabels[f.factor] ?? f.factor}>
                     {factorLabels[f.factor] ?? f.factor}
                   </span>
-                  <div className="flex-1 h-2 rounded-full bg-surface-3 overflow-hidden">
+                  <div className="flex-1 h-2.5 rounded-full bg-surface-3 overflow-hidden">
                     <div
                       className="h-full rounded-full bg-danger transition-all duration-500"
                       style={{ width: `${(f.count / maxFactorCount) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-text-quaternary font-mono w-12 text-right">{f.pct}%</span>
+                  <span className="text-sm text-text-secondary font-mono w-12 text-right">{f.pct}%</span>
                 </div>
               ))}
             </div>
@@ -238,7 +238,7 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
         {/* Score Distribution */}
         {stats.scoreDistribution.length > 0 && (
           <div className="space-y-3 pt-4 border-t border-border-subtle">
-            <h4 className="text-xs font-semibold text-text-quaternary uppercase tracking-wider">Score Distribution</h4>
+            <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Score Distribution</h4>
             <div className="flex items-end gap-1.5 h-20">
               {stats.scoreDistribution.map((d) => {
                 const maxCount = Math.max(...stats.scoreDistribution.map((x) => x.count), 1);
@@ -246,10 +246,10 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
                 return (
                   <div key={d.label} className="flex-1 flex flex-col items-center justify-end h-full" title={`${d.label}: ${d.count} repos`}>
                     <div
-                      className="w-full rounded-t bg-accent/70 hover:bg-accent transition-all duration-300"
+                      className="w-full rounded-t bg-accent hover:bg-accent-hover transition-all duration-300"
                       style={{ height: `${barHeight}%`, minHeight: "4px" }}
                     />
-                    <span className="text-xs text-text-quaternary mt-1 shrink-0">{d.label}</span>
+                    <span className="text-xs text-text-tertiary mt-1 shrink-0">{d.label}</span>
                   </div>
                 );
               })}
@@ -275,7 +275,7 @@ function SeverityBreakdown({ severe, high, low, total }: SeverityBreakdownProps)
 
   return (
     <div className="rounded-xl border border-border-default bg-surface-1 p-4 space-y-3" role="region" aria-label="Severity breakdown">
-      <h4 className="text-xs font-semibold text-text-quaternary uppercase tracking-wider">Severity Breakdown</h4>
+      <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Severity Breakdown</h4>
       
       {/* Stacked Bar */}
       <div className="h-3 rounded-full bg-surface-3 overflow-hidden flex">

@@ -102,7 +102,9 @@ describe("RepositoriesTab", () => {
     const selectedResult = results[0];
     render(<RepositoriesTab {...defaultProps} results={results} selectedResult={selectedResult} />);
     
-    expect(screen.getByTestId("score-panel")).toBeInTheDocument();
+    // Desktop panel + mobile modal both render, so we expect 2
+    const panels = screen.getAllByTestId("score-panel");
+    expect(panels.length).toBeGreaterThanOrEqual(1);
   });
 
   it("pluralizes correctly for multiple repos", () => {

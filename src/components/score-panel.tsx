@@ -70,11 +70,11 @@ export function ScorePanel({
   }
 
   return (
-    <div className={`w-full lg:w-96 shrink-0 animate-slide-in-right rounded-xl border border-border-default bg-surface-1 overflow-hidden ${severityGlow(result.severity)}`} role="complementary" aria-label={`Score details for ${result.repoName}`}>
+    <div className={`w-full lg:w-96 shrink-0 animate-slide-in-right rounded-xl border border-border-default bg-surface-1 overflow-hidden h-fit ${severityGlow(result.severity)}`} role="complementary" aria-label={`Score details for ${result.repoName}`}>
       <div className="p-5 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-semibold text-base truncate">{result.repoName}</h3>
+            <h3 className="font-semibold text-base sm:text-lg truncate">{result.repoName}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span
                 className={`text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
@@ -131,7 +131,7 @@ export function ScorePanel({
               {result.rotScore}
             </span>
           </div>
-          <div className="text-xs text-text-tertiary space-y-1">
+          <div className="text-sm text-text-tertiary space-y-1">
             <div>
               <span className="text-text-quaternary">Max possible:</span>{" "}
               <span className="font-mono">{maxScore}</span>
@@ -145,7 +145,7 @@ export function ScorePanel({
 
         <div className="space-y-1">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-[11px] font-semibold text-text-quaternary uppercase tracking-wider">Score Breakdown</h4>
+            <h4 className="text-xs font-semibold text-text-quaternary uppercase tracking-wider">Score Breakdown</h4>
             <button
               onClick={copyBreakdown}
               className="inline-flex items-center gap-1 text-xs text-text-quaternary hover:text-text-secondary transition-colors px-1.5 py-0.5 rounded hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
@@ -190,11 +190,11 @@ export function ScorePanel({
               >
                 <path d={icons[key] ?? "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"} />
               </svg>
-              <span className={`flex-1 text-xs ${value > 0 ? "text-text-primary" : "text-text-quaternary"}`}>
+              <span className={`flex-1 text-sm ${value > 0 ? "text-text-primary" : "text-text-quaternary"}`}>
                 {labels[key] ?? key}
               </span>
               <span
-                className={`font-mono text-xs font-semibold tabular-nums ${
+                className={`font-mono text-sm font-semibold tabular-nums ${
                   value > 0 ? "text-danger" : "text-text-quaternary"
                 }`}
               >
@@ -204,7 +204,7 @@ export function ScorePanel({
           ))}
         </div>
 
-        <div className="text-xs space-y-2 pt-3 border-t border-border-subtle">
+        <div className="text-sm space-y-2 pt-3 border-t border-border-subtle">
           <div className="flex items-center justify-between">
             <span className="text-text-quaternary">Last commit:</span>
             <span

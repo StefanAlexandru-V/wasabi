@@ -18,41 +18,56 @@
   --text-2xl: 1.625rem;      /* 26px */
   --text-2xl--line-height: 1.3;
 
-  --color-surface-0: #09090b;
-  --color-surface-1: #0f0f12;
-  --color-surface-2: #18181b;
-  --color-surface-3: #1f1f23;
-  --color-surface-4: #27272a;
+  /* Surfaces — warmer dark tones (hint of green/brown) */
+  --color-surface-0: #0a0b0a;       /* near-black with warm green undertone */
+  --color-surface-1: #101210;       /* card background */
+  --color-surface-2: #181a18;       /* elevated surface */
+  --color-surface-3: #1f221f;       /* hover / header backgrounds */
+  --color-surface-4: #272a27;       /* active / pressed states */
 
-  --color-border-default: #27272a;
-  --color-border-subtle: #1f1f23;
-  --color-border-hover: #3f3f46;
+  /* Borders — organic, warm */
+  --color-border-default: #262926;
+  --color-border-subtle: #1e211e;
+  --color-border-hover: #3a3f3a;
 
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-tertiary: #71717a;
-  --color-text-quaternary: #52525b;
+  /* Text — warm tones */
+  --color-text-primary: #f5f5f0;    /* warm white, like Japanese washi paper */
+  --color-text-secondary: #a3a39e;
+  --color-text-tertiary: #737370;
+  --color-text-quaternary: #52524e;
 
-  --color-accent: #6366f1;
-  --color-accent-hover: #818cf8;
-  --color-accent-subtle: rgba(99, 102, 241, 0.12);
+  /* Accent — Wasabi Green (darker for better contrast with white text) */
+  --color-accent: #16a34a;          /* darker wasabi green for readability */
+  --color-accent-hover: #22c55e;    /* lighter on hover */
+  --color-accent-subtle: rgba(22, 163, 74, 0.12);
 
+  /* Wasabi brand color (for logo, special highlights) */
+  --color-wasabi: #22c55e;
+  --color-wasabi-light: #4ade80;
+  --color-wasabi-glow: rgba(34, 197, 94, 0.15);
+
+  /* Text shadow for text on colored backgrounds */
+  --shadow-text: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  /* Semantic colors */
   --color-success: #22c55e;
-  --color-success-subtle: rgba(34, 197, 94, 0.12);
-  --color-warning: #f59e0b;
-  --color-warning-subtle: rgba(245, 158, 11, 0.12);
-  --color-danger: #ef4444;
-  --color-danger-subtle: rgba(239, 68, 68, 0.12);
-  --color-severe: #f97316;
-  --color-severe-subtle: rgba(249, 115, 22, 0.12);
+  --color-success-subtle: rgba(34, 197, 94, 0.10);
+  --color-warning: #facc15;         /* slightly warmer yellow */
+  --color-warning-subtle: rgba(250, 204, 21, 0.10);
+  --color-danger: #f43f5e;          /* rose-red, more refined than pure red */
+  --color-danger-subtle: rgba(244, 63, 94, 0.10);
+  --color-severe: #fb923c;          /* warm orange */
+  --color-severe-subtle: rgba(251, 146, 60, 0.10);
 
   --animate-fade-in: fade-in 0.5s ease-out both;
   --animate-fade-in-up: fade-in-up 0.5s ease-out both;
   --animate-slide-in-right: slide-in-right 0.3s ease-out both;
+  --animate-slide-up: slide-up 0.3s ease-out both;
   --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
   --animate-shimmer: shimmer 2s linear infinite;
   --animate-scan-line: scan-line 1.5s ease-in-out infinite;
   --animate-confetti: confetti 2s ease-out forwards;
+  --animate-wasabi-glow: wasabi-glow 3s ease-in-out infinite;
 }
 
 @keyframes fade-in {
@@ -82,6 +97,17 @@
   }
 }
 
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -102,14 +128,23 @@
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
+@keyframes wasabi-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.1), 0 0 40px rgba(74, 222, 128, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(74, 222, 128, 0.2), 0 0 60px rgba(74, 222, 128, 0.1);
+  }
+}
+
 ::selection {
-  background: rgba(99, 102, 241, 0.3);
-  color: #fafafa;
+  background: rgba(74, 222, 128, 0.25);
+  color: #f5f5f0;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #27272a transparent;
+  scrollbar-color: #262926 transparent;
 }
 
 *::-webkit-scrollbar {
@@ -122,59 +157,72 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #27272a;
+  background-color: #262926;
   border-radius: 3px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: #3f3f46;
+  background-color: #3a3f3a;
 }
 
 html[data-theme="light"] * {
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: #d4d4d4 transparent;
 }
 
 html[data-theme="light"] *::-webkit-scrollbar-thumb {
-  background-color: #d1d5db;
+  background-color: #d4d4d4;
 }
 
 html[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
-  background-color: #9ca3af;
+  background-color: #a3a3a3;
 }
 
 html[data-theme="light"] ::selection {
-  background: rgba(79, 70, 229, 0.2);
-  color: #111827;
+  background: rgba(22, 163, 74, 0.2);
+  color: #171717;
 }
 
 html[data-theme="light"] {
-  --color-surface-0: #ffffff;
-  --color-surface-1: #f9fafb;
-  --color-surface-2: #f3f4f6;
-  --color-surface-3: #e5e7eb;
-  --color-surface-4: #d1d5db;
+  /* Surfaces — clean, neutral grays (Vercel-inspired) */
+  --color-surface-0: #fafafa;       /* page background */
+  --color-surface-1: #ffffff;       /* card background */
+  --color-surface-2: #f5f5f5;       /* hover state */
+  --color-surface-3: #ebebeb;       /* elevated/header */
+  --color-surface-4: #e5e5e5;       /* active/pressed */
 
-  --color-border-default: #e5e7eb;
-  --color-border-subtle: #f3f4f6;
-  --color-border-hover: #d1d5db;
+  /* Borders — clean, visible */
+  --color-border-default: #e5e5e5;
+  --color-border-subtle: #efefef;
+  --color-border-hover: #d4d4d4;
 
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-tertiary: #6b7280;
-  --color-text-quaternary: #9ca3af;
+  /* Text — true neutral grays, high contrast */
+  --color-text-primary: #171717;    /* near-black */
+  --color-text-secondary: #525252;  /* readable secondary */
+  --color-text-tertiary: #737373;   /* muted */
+  --color-text-quaternary: #a3a3a3; /* placeholder */
 
-  --color-accent: #4f46e5;
-  --color-accent-hover: #6366f1;
-  --color-accent-subtle: rgba(79, 70, 229, 0.08);
+  /* Accent — darker green for light mode readability */
+  --color-accent: #15803d;          /* green-700 - darker for contrast */
+  --color-accent-hover: #166534;    /* green-800 on hover */
+  --color-accent-subtle: #f0fdf4;   /* green-50 - solid, not transparent */
 
-  --color-success: #16a34a;
-  --color-success-subtle: rgba(22, 163, 74, 0.08);
-  --color-warning: #d97706;
-  --color-warning-subtle: rgba(217, 119, 6, 0.08);
-  --color-danger: #dc2626;
-  --color-danger-subtle: rgba(220, 38, 38, 0.08);
-  --color-severe: #ea580c;
-  --color-severe-subtle: rgba(234, 88, 12, 0.08);
+  /* Wasabi brand */
+  --color-wasabi: #15803d;
+  --color-wasabi-light: #16a34a;
+  --color-wasabi-glow: #f0fdf4;
+
+  /* Semantic — darker colors + solid subtle backgrounds */
+  --color-success: #15803d;         /* green-700 */
+  --color-success-subtle: #f0fdf4;  /* green-50 */
+  --color-warning: #a16207;         /* amber-700 */
+  --color-warning-subtle: #fefce8;  /* yellow-50 */
+  --color-danger: #b91c1c;          /* red-700 */
+  --color-danger-subtle: #fef2f2;   /* red-50 */
+  --color-severe: #c2410c;          /* orange-700 */
+  --color-severe-subtle: #fff7ed;   /* orange-50 */
+
+  /* No text shadow needed in light mode */
+  --shadow-text: none;
 }
 
 @layer base {
@@ -187,31 +235,55 @@ html[data-theme="light"] {
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(to right, #fafafa, #a1a1aa);
+    background: linear-gradient(135deg, #4ade80, #f5f5f0);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   html[data-theme="light"] .text-gradient {
-    background: linear-gradient(to right, #111827, #6b7280);
+    background: linear-gradient(135deg, #16a34a, #171717);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
+  .text-brand {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .text-on-color {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+
   .glow {
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.1),
-      0 0 20px -5px rgba(99, 102, 241, 0.15),
-      0 0 40px -10px rgba(99, 102, 241, 0.1);
+      0 0 0 1px rgba(74, 222, 128, 0.1),
+      0 0 20px -5px rgba(74, 222, 128, 0.15),
+      0 0 40px -10px rgba(74, 222, 128, 0.1);
+  }
+
+  html[data-theme="light"] .glow {
+    box-shadow:
+      0 0 0 1px rgba(22, 163, 74, 0.15),
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 12px rgba(22, 163, 74, 0.08);
   }
 
   .glow-danger {
     box-shadow:
-      0 0 0 1px rgba(239, 68, 68, 0.1),
-      0 0 20px -5px rgba(239, 68, 68, 0.15),
-      0 0 40px -10px rgba(239, 68, 68, 0.1);
+      0 0 0 1px rgba(244, 63, 94, 0.1),
+      0 0 20px -5px rgba(244, 63, 94, 0.15),
+      0 0 40px -10px rgba(244, 63, 94, 0.1);
+  }
+
+  html[data-theme="light"] .glow-danger {
+    box-shadow:
+      0 0 0 1px rgba(220, 38, 38, 0.15),
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 12px rgba(220, 38, 38, 0.08);
   }
 
   .glow-success {
@@ -219,6 +291,13 @@ html[data-theme="light"] {
       0 0 0 1px rgba(34, 197, 94, 0.1),
       0 0 20px -5px rgba(34, 197, 94, 0.15),
       0 0 40px -10px rgba(34, 197, 94, 0.1);
+  }
+
+  html[data-theme="light"] .glow-success {
+    box-shadow:
+      0 0 0 1px rgba(22, 163, 74, 0.15),
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 12px rgba(22, 163, 74, 0.08);
   }
 
   .noise {

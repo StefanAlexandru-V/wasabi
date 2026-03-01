@@ -1279,10 +1279,9 @@ export function Dashboard({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 h-14">
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-2 border border-border-default">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="7" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 1.5" opacity="0.8"/>
-                <path d="M9 9l1.5 1.5M15 9l-1.5 1.5M9 15l1.5-1.5M15 15l-1.5-1.5" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
-                <circle cx="12" cy="12" r="1.5" fill="#f59e0b"/>
+              <svg width="14" height="14" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="text-wasabi">
+                <path d="M16 4c-5 5-9 10-9 16a9 9 0 0018 0c0-6-4-11-9-16z" fill="currentColor" opacity="0.85"/>
+                <path d="M16 8v14M13 13l3-2 3 2M13 17.5l3-1.5 3 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.35"/>
               </svg>
             </div>
             <h1 className="text-sm font-semibold tracking-tight">Wasabi</h1>
@@ -1407,14 +1406,14 @@ export function Dashboard({
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-3">
           {/* Left: Org selector with add button */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center gap-2 min-w-0 flex-1 sm:flex-none">
+            <div className="relative flex-1 sm:flex-none">
               <label htmlFor="org-select" className="sr-only">Select organization</label>
               <select
                 id="org-select"
                 value={selectedOrgId}
                 onChange={(e) => setSelectedOrgId(e.target.value)}
-                className="appearance-none rounded-lg border border-border-default bg-surface-1 pl-3 pr-8 py-2 text-sm text-text-primary transition-colors hover:border-border-hover focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 min-w-[180px]"
+                className="w-full sm:w-auto appearance-none rounded-lg border border-border-default bg-surface-1 pl-3 pr-8 py-2 text-sm text-text-primary transition-colors hover:border-border-hover focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 sm:min-w-[180px]"
                 aria-label="Select organization"
               >
                 <option value="">Select organization...</option>
@@ -1433,7 +1432,7 @@ export function Dashboard({
               onClick={() => setShowAddOrg(!showAddOrg)}
               className={`rounded-lg p-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                 showAddOrg 
-                  ? "bg-accent text-white" 
+                  ? "bg-accent text-white text-on-color" 
                   : "border border-dashed border-border-hover text-text-tertiary hover:border-accent/40 hover:text-accent hover:bg-accent-subtle"
               }`}
               aria-expanded={showAddOrg}

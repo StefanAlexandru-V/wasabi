@@ -15,7 +15,7 @@ export function SignInButton() {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="group relative inline-flex items-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-medium text-gray-900 transition-all duration-200 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0"
+      className="group relative inline-flex items-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-medium text-gray-900 transition-all duration-200 hover:bg-gray-100 hover:scale-[1.02] hover:shadow-lg hover:shadow-wasabi-glow/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wasabi/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0"
     >
       {loading ? (
         <svg className="animate-spin h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none">

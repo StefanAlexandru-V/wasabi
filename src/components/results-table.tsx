@@ -37,7 +37,7 @@ function severityBadge(severity: string) {
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider border ${styles[severity] ?? styles.low}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold capitalize border ${styles[severity] ?? styles.low}`}
     >
       {severity}
     </span>
@@ -121,13 +121,13 @@ function MobileCard({
   const commit = formatCommitDate(result.lastCommit);
   return (
     <div
-      className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
+      className={`w-full text-left p-3 sm:p-4 rounded-xl border transition-all duration-200 ${
         isSelected
           ? "bg-surface-2 border-accent/30 glow"
           : "bg-surface-1 border-border-default hover:bg-surface-2 hover:border-border-hover"
       }`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2 sm:gap-3">
         <input
           type="checkbox"
           checked={isChecked}
@@ -136,39 +136,48 @@ function MobileCard({
           aria-label={`Select ${result.repoName}`}
         />
         <button onClick={onSelect} className="flex-1 text-left min-w-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-text-quaternary text-xs font-mono">#{result.rank}</span>
-              <span className="font-medium text-sm truncate">{result.repoName}</span>
-              {result.archived && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
-              )}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-text-quaternary text-[10px] sm:text-xs font-mono">#{result.rank}</span>
+                {result.archived && (
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">Archived</span>
+                )}
+              </div>
+              <span className="font-medium text-sm block truncate">{result.repoName}</span>
             </div>
-            {severityBadge(result.severity)}
+            <div className="shrink-0">
+              {severityBadge(result.severity)}
+            </div>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <ScoreBar score={result.rotScore} />
               <DeltaBadge current={result.rotScore} previous={previousScore} />
             </div>
-            <div className="flex items-center gap-2 text-xs text-text-tertiary" title={commit.title}>
+            <div className="text-[10px] sm:text-xs text-text-tertiary truncate" title={commit.title}>
               {result.lastCommit ? commit.display : "No commits"}
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            {result.scoreBreakdown.criticalVulnerabilities > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">Vulns</span>
-            )}
-            {result.scoreBreakdown.noBranchProtection > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">No protection</span>
-            )}
-            {result.scoreBreakdown.stalePRs > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-warning-subtle text-warning font-medium">Stale PRs</span>
-            )}
-            {result.scoreBreakdown.noCI > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-tertiary font-medium">No CI</span>
-            )}
-          </div>
+          {(result.scoreBreakdown.criticalVulnerabilities > 0 ||
+            result.scoreBreakdown.noBranchProtection > 0 ||
+            result.scoreBreakdown.stalePRs > 0 ||
+            result.scoreBreakdown.noCI > 0) && (
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              {result.scoreBreakdown.criticalVulnerabilities > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">Vulns</span>
+              )}
+              {result.scoreBreakdown.noBranchProtection > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-danger-subtle text-danger font-medium">No protection</span>
+              )}
+              {result.scoreBreakdown.stalePRs > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-subtle text-warning font-medium">Stale PRs</span>
+              )}
+              {result.scoreBreakdown.noCI > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-tertiary font-medium">No CI</span>
+              )}
+            </div>
+          )}
         </button>
       </div>
     </div>
@@ -308,7 +317,7 @@ export function ResultsTable({
     );
   }
 
-  const thClass = "py-3 px-4 text-left text-[11px] font-semibold text-text-quaternary uppercase tracking-wider";
+  const thClass = "py-3 px-4 text-left text-xs font-semibold text-text-tertiary";
 
   function SortableHeader({ field, label, className }: { field: SortField; label: string; className?: string }) {
     return (
@@ -329,90 +338,96 @@ export function ResultsTable({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
-        <div className="relative flex-1 sm:max-w-xs">
-          <label htmlFor="results-search" className="sr-only">Search repositories</label>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary pointer-events-none"
-            aria-hidden="true"
-          >
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <input
-            id="results-search"
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search repos..."
-            className="w-full rounded-lg border border-border-default bg-surface-1 pl-9 pr-3 py-1.5 text-sm placeholder-text-quaternary transition-colors focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          {severityFilters.map((f) => (
-            <button
-              key={f}
-              onClick={() => { setSeverityFilter(f); setPage(0); }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
-                severityFilter === f
-                  ? f === "severe"
-                    ? "bg-danger-subtle text-danger border border-danger/20"
-                    : f === "high"
-                    ? "bg-severe-subtle text-severe border border-severe/20"
-                    : f === "low"
-                    ? "bg-success-subtle text-success border border-success/20"
-                    : "bg-accent-subtle text-accent border border-accent/20"
-                  : "text-text-quaternary hover:text-text-secondary hover:bg-surface-2 border border-transparent"
-              }`}
-              aria-pressed={severityFilter === f}
+      <div className="flex flex-col gap-2 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="relative flex-1 sm:max-w-xs">
+            <label htmlFor="results-search" className="sr-only">Search repositories</label>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-quaternary pointer-events-none"
+              aria-hidden="true"
             >
-              {f}
-            </button>
-          ))}
-        </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowColumnMenu(!showColumnMenu)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-text-quaternary hover:text-text-secondary hover:bg-surface-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-            aria-label="Toggle columns"
-            title="Toggle columns"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 3v18M3 12h18M3 6h18M3 18h18" strokeLinecap="round"/>
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Columns
-          </button>
-          {showColumnMenu && (
-            <div className="absolute right-0 top-full mt-1 z-20 w-40 rounded-lg border border-border-default bg-surface-1 shadow-xl py-1 animate-fade-in">
-              {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
-                <label
-                  key={key}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-surface-2 cursor-pointer"
+            <input
+              id="results-search"
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Search repos..."
+              className="w-full rounded-lg border border-border-default bg-surface-1 pl-9 pr-3 py-1.5 text-sm placeholder-text-quaternary transition-colors focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+            />
+          </div>
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <div className="flex items-center gap-1">
+              {severityFilters.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => { setSeverityFilter(f); setPage(0); }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                    severityFilter === f
+                      ? f === "severe"
+                        ? "bg-danger-subtle text-danger border border-danger/20"
+                        : f === "high"
+                        ? "bg-severe-subtle text-severe border border-severe/20"
+                        : f === "low"
+                        ? "bg-success-subtle text-success border border-success/20"
+                        : "bg-accent-subtle text-accent border border-accent/20"
+                      : "text-text-tertiary hover:text-text-secondary hover:bg-surface-2 border border-transparent"
+                  }`}
+                  aria-pressed={severityFilter === f}
                 >
-                  <input
-                    type="checkbox"
-                    checked={visibleColumns[key]}
-                    onChange={() =>
-                      setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }))
-                    }
-                    className="accent-accent"
-                  />
-                  {columnLabels[key]}
-                </label>
+                  {f}
+                </button>
               ))}
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumnMenu(!showColumnMenu)}
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-text-quaternary hover:text-text-secondary hover:bg-surface-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                  aria-label="Toggle columns"
+                  title="Toggle columns"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 3v18M3 12h18M3 6h18M3 18h18" strokeLinecap="round"/>
+                  </svg>
+                  Columns
+                </button>
+                {showColumnMenu && (
+                  <div className="absolute right-0 top-full mt-1 z-20 w-40 rounded-lg border border-border-default bg-surface-1 shadow-xl py-1 animate-fade-in">
+                    {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
+                      <label
+                        key={key}
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-surface-2 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[key]}
+                          onChange={() =>
+                            setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }))
+                          }
+                          className="accent-accent"
+                        />
+                        {columnLabels[key]}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {(search || severityFilter !== "all") && (
+                <span className="text-sm text-text-tertiary whitespace-nowrap">
+                  {sorted.length}/{results.length}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-        {(search || severityFilter !== "all") && (
-          <span className="text-xs text-text-quaternary">
-            {sorted.length} of {results.length} repos
-          </span>
-        )}
       </div>
 
       <div className="flex flex-col gap-2 md:hidden">
@@ -433,7 +448,7 @@ export function ResultsTable({
       </div>
 
       <div className="overflow-x-auto hidden md:block rounded-xl border border-border-default bg-surface-1">
-        <table className="w-full text-sm" role="grid" aria-label="Repository scan results">
+        <table className="w-full" role="grid" aria-label="Repository scan results">
           <thead>
             <tr className="border-b border-border-default">
               {onToggleRow && (
@@ -493,12 +508,12 @@ export function ResultsTable({
                       />
                     </td>
                   )}
-                  <td className="py-3 px-4 font-mono text-xs text-text-quaternary">{r.rank}</td>
+                  <td className="py-3 px-4 font-mono text-sm text-text-tertiary">{r.rank}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-text-primary">{r.repoName}</span>
+                      <span className="font-medium text-text-primary text-sm">{r.repoName}</span>
                       {r.archived && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">ARCHIVED</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-surface-3 text-text-quaternary font-medium">Archived</span>
                       )}
                     </div>
                   </td>
@@ -509,30 +524,30 @@ export function ResultsTable({
                     </div>
                   </td>
                   <td className="py-3 px-4">{severityBadge(r.severity)}</td>
-                  <td className="py-3 px-4 text-text-tertiary text-xs font-mono" title={commit.title}>
+                  <td className="py-3 px-4 text-text-tertiary text-sm font-mono" title={commit.title}>
                     {commit.display}
                   </td>
                   {visibleColumns.vulns && (
                     <td className="py-3 px-4">
                       {r.scoreBreakdown.criticalVulnerabilities > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-danger text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 text-danger text-sm font-medium">
                           <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                           Yes
                         </span>
                       ) : (
-                        <span className="text-text-quaternary text-xs">No</span>
+                        <span className="text-text-quaternary text-sm">No</span>
                       )}
                     </td>
                   )}
                   {visibleColumns.branchProt && (
                     <td className="py-3 px-4">
                       {r.scoreBreakdown.noBranchProtection > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-danger text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 text-danger text-sm font-medium">
                           <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                           No
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-success text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 text-success text-sm font-medium">
                           <span className="h-1.5 w-1.5 rounded-full bg-success" />
                           Yes
                         </span>
@@ -542,12 +557,12 @@ export function ResultsTable({
                   {visibleColumns.stalePRs && (
                     <td className="py-3 px-4">
                       {r.scoreBreakdown.stalePRs > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-warning text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 text-warning text-sm font-medium">
                           <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                           &gt;5
                         </span>
                       ) : (
-                        <span className="text-text-quaternary text-xs">OK</span>
+                        <span className="text-text-quaternary text-sm">OK</span>
                       )}
                     </td>
                   )}
@@ -567,21 +582,21 @@ export function ResultsTable({
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-text-quaternary">
+          <span className="text-sm text-text-tertiary">
             Page {page + 1} of {totalPages}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium border border-border-default bg-surface-1 text-text-secondary transition-colors hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium border border-border-default bg-surface-1 text-text-secondary transition-colors hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium border border-border-default bg-surface-1 text-text-secondary transition-colors hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium border border-border-default bg-surface-1 text-text-secondary transition-colors hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               Next
             </button>

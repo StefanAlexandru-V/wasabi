@@ -271,6 +271,6 @@ describe("ResultsTable", () => {
     );
     const input = screen.getByPlaceholderText("Search repos...");
     await user.type(input, "rotting");
-    expect(screen.getByText("1 of 3 repos")).toBeInTheDocument();
+    expect(screen.getByText("1/3")).toBeInTheDocument();
   });
 });

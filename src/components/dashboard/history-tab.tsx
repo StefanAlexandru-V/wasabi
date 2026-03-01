@@ -126,7 +126,7 @@ export function HistoryTab({
                 <button
                   onClick={handleCompare}
                   disabled={!diffScanA || !diffScanB || diffScanA === diffScanB}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium transition-all hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-accent text-white text-on-color text-sm font-medium transition-all hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                 >
                   Compare
                 </button>

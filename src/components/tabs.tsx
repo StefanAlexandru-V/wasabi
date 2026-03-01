@@ -71,7 +71,7 @@ export function TabList({ children, className = "" }: TabListProps) {
     <div 
       role="tablist" 
       aria-label="Dashboard sections"
-      className={`flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border-subtle ${className}`}
+      className={`grid grid-cols-3 sm:inline-flex sm:items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border-subtle ${className}`}
     >
       {children}
     </div>
@@ -97,7 +97,7 @@ export function TabTrigger({ value, children, icon, badge }: TabTriggerProps) {
       id={`tab-${value}`}
       onClick={() => setActiveTab(value)}
       className={`
-        relative flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all
+        relative flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50
         ${isActive 
           ? "bg-surface-0 text-text-primary shadow-sm" 
@@ -105,12 +105,12 @@ export function TabTrigger({ value, children, icon, badge }: TabTriggerProps) {
         }
       `}
     >
-      {icon && <span className="shrink-0">{icon}</span>}
-      <span>{children}</span>
+      {icon && <span className="shrink-0 hidden sm:block">{icon}</span>}
+      <span className="truncate">{children}</span>
       {typeof badge === "number" && badge > 0 && (
         <span className={`
-          inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold rounded-full
-          ${isActive ? "bg-accent text-white" : "bg-surface-4 text-text-tertiary"}
+          inline-flex items-center justify-center min-w-[14px] sm:min-w-[18px] h-[14px] sm:h-[18px] px-0.5 sm:px-1 text-[10px] sm:text-xs font-bold rounded-full shrink-0
+          ${isActive ? "bg-accent text-white text-on-color" : "bg-surface-4 text-text-tertiary"}
         `}>
           {badge > 99 ? "99+" : badge}
         </span>
