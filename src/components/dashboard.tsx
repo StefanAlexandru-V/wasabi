@@ -1610,6 +1610,7 @@ export function Dashboard({
                 lastScanTime={lastScanTime}
                 scanStatusInfo={scanStatusInfo}
                 isScanning={isScanning}
+                resultsLoading={resultsLoading}
                 onStartScan={selectedOrgId && !selectedOrgId.startsWith("temp-") && !isScanning ? startScan : undefined}
                 relativeTime={relativeTime}
               />

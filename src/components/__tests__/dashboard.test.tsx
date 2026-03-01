@@ -228,7 +228,7 @@ describe("Dashboard", () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText("Scanning in progress")).toBeInTheDocument();
+      expect(screen.getByText("Scanning repositories...")).toBeInTheDocument();
     });
   });
 

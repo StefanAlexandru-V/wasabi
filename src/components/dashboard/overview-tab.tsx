@@ -12,6 +12,7 @@ interface OverviewTabProps {
   lastScanTime: string | null;
   scanStatusInfo: ScanStatusInfo | null;
   isScanning: boolean;
+  resultsLoading?: boolean;
   onStartScan?: () => void;
   relativeTime: (date: string) => string;
 }
@@ -23,6 +24,7 @@ export function OverviewTab({
   lastScanTime,
   scanStatusInfo,
   isScanning,
+  resultsLoading,
   onStartScan,
   relativeTime,
 }: OverviewTabProps) {
@@ -51,13 +53,10 @@ export function OverviewTab({
         reason={qualityGate.reason}
         onStartScan={onStartScan}
         isScanning={isScanning}
+        resultsLoading={resultsLoading}
+        scanProgress={scanStatusInfo}
         metrics={qualityGateMetrics}
       />
-
-      {/* Scan Progress */}
-      {isScanning && scanStatusInfo && (
-        <ScanProgressCard statusInfo={scanStatusInfo} />
-      )}
 
       {/* KPI Cards */}
       {results.length > 0 && (
@@ -191,35 +190,35 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
 
   return (
     <div className="rounded-xl border border-border-default bg-surface-1 overflow-hidden" role="region" aria-label="Organization Health Overview">
-      <div className="px-5 py-3 border-b border-border-subtle bg-surface-2/50">
-        <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Org Health Overview</h3>
+      <div className="px-5 py-3 border-b border-border-default bg-surface-2">
+        <h3 className="text-sm font-semibold text-text-secondary">Org Health Overview</h3>
       </div>
       
       <div className="p-5 space-y-5">
         {/* Quick Stats Row */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-text-tertiary mb-0.5">Severe %</p>
+            <p className="text-sm text-text-secondary mb-0.5">Severe %</p>
             <p className="text-xl font-bold font-mono text-text-primary">{stats.severePct}%</p>
           </div>
           <div>
-            <p className="text-xs text-text-tertiary mb-0.5">Avg Score</p>
+            <p className="text-sm text-text-secondary mb-0.5">Avg Score</p>
             <p className="text-xl font-bold font-mono text-text-primary">{stats.avgScore}</p>
           </div>
           <div>
-            <p className="text-xs text-text-tertiary mb-0.5">Total Scans</p>
+            <p className="text-sm text-text-secondary mb-0.5">Total Scans</p>
             <p className="text-xl font-bold font-mono text-text-primary">{stats.totalScans}</p>
           </div>
         </div>
 
         {/* Top Rot Factors */}
         {stats.topRotFactors.length > 0 && (
-          <div className="space-y-3 pt-4 border-t border-border-subtle">
-            <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Top Rot Factors</h4>
-            <div className="space-y-2">
+          <div className="space-y-3 pt-4 border-t border-border-default">
+            <h4 className="text-sm font-semibold text-text-secondary">Top Rot Factors</h4>
+            <div className="space-y-2.5">
               {stats.topRotFactors.map((f) => (
                 <div key={f.factor} className="flex items-center gap-3">
-                  <span className="text-sm text-text-secondary w-32 truncate" title={factorLabels[f.factor] ?? f.factor}>
+                  <span className="text-sm text-text-primary w-40 truncate" title={factorLabels[f.factor] ?? f.factor}>
                     {factorLabels[f.factor] ?? f.factor}
                   </span>
                   <div className="flex-1 h-2.5 rounded-full bg-surface-3 overflow-hidden">
@@ -228,7 +227,7 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
                       style={{ width: `${(f.count / maxFactorCount) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm text-text-secondary font-mono w-12 text-right">{f.pct}%</span>
+                  <span className="text-sm text-text-primary font-mono w-12 text-right">{f.pct}%</span>
                 </div>
               ))}
             </div>
@@ -237,19 +236,19 @@ function OrgHealthPanel({ stats }: OrgHealthPanelProps) {
 
         {/* Score Distribution */}
         {stats.scoreDistribution.length > 0 && (
-          <div className="space-y-3 pt-4 border-t border-border-subtle">
-            <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Score Distribution</h4>
+          <div className="space-y-3 pt-4 border-t border-border-default">
+            <h4 className="text-sm font-semibold text-text-secondary">Score Distribution</h4>
             <div className="flex items-end gap-1.5 h-20">
               {stats.scoreDistribution.map((d) => {
                 const maxCount = Math.max(...stats.scoreDistribution.map((x) => x.count), 1);
-                const barHeight = Math.max((d.count / maxCount) * 100, 8);
+                const barHeight = d.count > 0 ? Math.max((d.count / maxCount) * 100, 12) : 0;
                 return (
                   <div key={d.label} className="flex-1 flex flex-col items-center justify-end h-full" title={`${d.label}: ${d.count} repos`}>
                     <div
-                      className="w-full rounded-t bg-accent hover:bg-accent-hover transition-all duration-300"
-                      style={{ height: `${barHeight}%`, minHeight: "4px" }}
+                      className={`w-full rounded-t transition-all duration-300 ${d.count > 0 ? "bg-accent hover:bg-accent-hover" : "bg-surface-3"}`}
+                      style={{ height: d.count > 0 ? `${barHeight}%` : "4px" }}
                     />
-                    <span className="text-xs text-text-tertiary mt-1 shrink-0">{d.label}</span>
+                    <span className="text-xs text-text-secondary mt-1 shrink-0">{d.label}</span>
                   </div>
                 );
               })}
@@ -275,7 +274,7 @@ function SeverityBreakdown({ severe, high, low, total }: SeverityBreakdownProps)
 
   return (
     <div className="rounded-xl border border-border-default bg-surface-1 p-4 space-y-3" role="region" aria-label="Severity breakdown">
-      <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Severity Breakdown</h4>
+      <h4 className="text-sm font-semibold text-text-secondary">Severity Breakdown</h4>
       
       {/* Stacked Bar */}
       <div className="h-3 rounded-full bg-surface-3 overflow-hidden flex">
@@ -320,56 +319,6 @@ function SeverityBreakdown({ severe, high, low, total }: SeverityBreakdownProps)
           <span className="font-mono text-text-secondary">{low}</span>
         </div>
       </div>
-    </div>
-  );
-}
-
-interface ScanProgressCardProps {
-  statusInfo: ScanStatusInfo;
-}
-
-function ScanProgressCard({ statusInfo }: ScanProgressCardProps) {
-  const total = statusInfo.totalRepoCount;
-  const processed = statusInfo.processedRepoCount;
-  const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
-
-  const elapsed = statusInfo.startedAt
-    ? Math.max(0, Math.floor((Date.now() - new Date(statusInfo.startedAt).getTime()) / 1000))
-    : 0;
-  const elapsedStr = elapsed > 0 ? (elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`) : "";
-
-  return (
-    <div className="rounded-xl border border-warning/20 bg-warning-subtle p-4 space-y-3" role="status" aria-live="polite">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-warning" />
-          </div>
-          <span className="text-sm font-medium text-warning">Scanning in progress</span>
-        </div>
-        {elapsedStr && (
-          <span className="text-xs text-text-quaternary">{elapsedStr}</span>
-        )}
-      </div>
-      
-      {total > 0 && (
-        <>
-          <div className="h-2 rounded-full bg-surface-3 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-warning transition-all duration-500"
-              style={{ width: `${Math.max(pct, 2)}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-text-tertiary">
-              <span className="font-mono font-medium text-text-secondary">{processed}</span> of{" "}
-              <span className="font-mono">{total}</span> repos processed
-            </span>
-            <span className="font-mono text-warning">{pct}%</span>
-          </div>
-        </>
-      )}
     </div>
   );
 }

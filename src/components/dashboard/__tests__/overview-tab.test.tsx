@@ -120,18 +120,32 @@ describe("QualityGateCard", () => {
     expect(screen.getByRole("button", { name: /Start Scan/i })).toBeInTheDocument();
   });
 
-  it("calls onStartScan when button clicked", () => {
+  it("calls onStartScan when confirmed in modal", () => {
     const onStartScan = vi.fn();
     render(<QualityGateCard status="unknown" reason="No scan data" onStartScan={onStartScan} />);
     
+    // Click the scan button to open modal
     fireEvent.click(screen.getByRole("button", { name: /Start Scan/i }));
+    
+    // Modal should appear with Cancel and Start Scan buttons
+    // Find all Start Scan buttons and click the one in the modal (second one)
+    const startScanButtons = screen.getAllByRole("button", { name: /Start Scan/i });
+    fireEvent.click(startScanButtons[1]); // Modal confirm button
     expect(onStartScan).toHaveBeenCalled();
   });
 
   it("shows scanning state when isScanning", () => {
-    render(<QualityGateCard status="unknown" reason="No scan data" onStartScan={() => {}} isScanning />);
+    const scanProgress = {
+      status: "running" as const,
+      startedAt: new Date().toISOString(),
+      totalRepoCount: 10,
+      processedRepoCount: 3,
+    };
+    render(<QualityGateCard status="unknown" reason="No scan data" onStartScan={() => {}} isScanning scanProgress={scanProgress} />);
     
-    expect(screen.getByRole("button", { name: /Scanning/i })).toBeDisabled();
+    expect(screen.getByText("Scanning repositories...")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("10")).toBeInTheDocument();
   });
 
   it("renders passing state", () => {
@@ -146,7 +160,7 @@ describe("QualityGateCard", () => {
     render(<QualityGateCard status="fail" reason="2 severe repos" onStartScan={onStartScan} />);
     
     expect(screen.getByText("Quality Gate Failed")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Re-scan/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Fix and scan/i })).toBeInTheDocument();
   });
 });
 
@@ -214,18 +228,19 @@ describe("OverviewTab", () => {
 
   it("renders scan progress when scanning", () => {
     const scanStatusInfo = {
-      status: "running",
+      status: "running" as const,
       startedAt: new Date().toISOString(),
       totalRepoCount: 20,
       processedRepoCount: 5,
     };
     render(<OverviewTab {...defaultProps} isScanning scanStatusInfo={scanStatusInfo} />);
     
-    expect(screen.getByText("Scanning in progress")).toBeInTheDocument();
+    expect(screen.getByText("Scanning repositories...")).toBeInTheDocument();
     // Text is split across elements, check individually
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("20")).toBeInTheDocument();
-    expect(screen.getByText(/repos processed/)).toBeInTheDocument();
+    // "repos" appears in text - verify progress is showing
+    expect(screen.getByText("25%")).toBeInTheDocument();
   });
 
   it("renders severity breakdown when results exist", () => {

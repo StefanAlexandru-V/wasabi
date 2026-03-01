@@ -71,19 +71,21 @@ export const scanRun = inngest.createFunction(
       });
     });
 
-    const BATCH_SIZE = 20;
+    const BATCH_SIZE = 100;
     const batches: typeof repos[] = [];
     for (let i = 0; i < repos.length; i += BATCH_SIZE) {
       batches.push(repos.slice(i, i + BATCH_SIZE));
     }
 
-    let processedCount = 0;
     const errors: string[] = [];
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
+      const batchStartCount = batchIndex * BATCH_SIZE;
 
       await step.run(`process-batch-${batchIndex}`, async () => {
+        let batchProcessed = 0;
+        
         for (const ghRepo of batch) {
           try {
             await sleepIfRateLimited();
@@ -162,17 +164,18 @@ export const scanRun = inngest.createFunction(
               },
             });
 
-            processedCount++;
+            batchProcessed++;
           } catch (e) {
             const msg = `Failed to process ${ghRepo.name}: ${e instanceof Error ? e.message : "Unknown"}`;
             console.error(msg);
             errors.push(msg);
           }
         }
-
+        
+        // Update progress at end of batch with cumulative count
         await prisma.scan.update({
           where: { id: scanId },
-          data: { processedRepoCount: processedCount },
+          data: { processedRepoCount: batchStartCount + batchProcessed },
         });
       });
     }
