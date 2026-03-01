@@ -160,6 +160,7 @@ function ScanTimelineItem({ scan, isCurrentScan, isLatest, onSelect, relativeTim
     failed: "bg-danger",
     running: "bg-warning",
     queued: "bg-warning",
+    cancelled: "bg-text-quaternary",
   };
 
   return (

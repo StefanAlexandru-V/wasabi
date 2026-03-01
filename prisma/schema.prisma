@@ -90,6 +90,7 @@ enum ScanStatus {
   running
   completed
   failed
+  cancelled
 }
 
 model Repository {

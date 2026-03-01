@@ -59,6 +59,7 @@ interface QualityGateCardProps {
   status: QualityGateStatus;
   reason: string;
   onStartScan?: () => void;
+  onCancelScan?: () => void;
   isScanning?: boolean;
   resultsLoading?: boolean;
   scanProgress?: ScanStatusInfo | null;
@@ -70,7 +71,7 @@ interface QualityGateCardProps {
   };
 }
 
-export function QualityGateCard({ status, reason, onStartScan, isScanning, resultsLoading, scanProgress, metrics }: QualityGateCardProps) {
+export function QualityGateCard({ status, reason, onStartScan, onCancelScan, isScanning, resultsLoading, scanProgress, metrics }: QualityGateCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -168,6 +169,14 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, resul
               <h3 className="text-sm font-semibold text-text-primary">Starting scan...</h3>
               <p className="text-xs text-text-secondary">Preparing to analyze repositories</p>
             </div>
+            {onCancelScan && (
+              <button
+                onClick={onCancelScan}
+                className="px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary border border-border-default rounded-lg hover:bg-surface-2 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -196,9 +205,19 @@ export function QualityGateCard({ status, reason, onStartScan, isScanning, resul
                 <h3 className="text-sm font-semibold text-text-primary">Scanning repositories...</h3>
                 <p className="text-xs text-text-secondary">Analyzing code health across your organization</p>
               </div>
-              {elapsed > 0 && (
-                <span className="text-xs text-text-tertiary font-mono">{formatElapsed(elapsed)}</span>
-              )}
+              <div className="flex items-center gap-3">
+                {elapsed > 0 && (
+                  <span className="text-xs text-text-tertiary font-mono">{formatElapsed(elapsed)}</span>
+                )}
+                {onCancelScan && (
+                  <button
+                    onClick={onCancelScan}
+                    className="px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary border border-border-default rounded-lg hover:bg-surface-2 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Progress bar */}

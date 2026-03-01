@@ -35,7 +35,11 @@ export async function GET(
         function closeStream() {
           if (!closed) {
             closed = true;
-            controller.close();
+            try {
+              controller.close();
+            } catch {
+              // Controller may already be closed
+            }
           }
         }
 
@@ -84,7 +88,7 @@ export async function GET(
               });
             }
 
-            if (current.status === "completed" || current.status === "failed") {
+            if (current.status === "completed" || current.status === "failed" || current.status === "cancelled") {
               send({ type: "done", status: current.status, repoCount: current.repoCount });
               closeStream();
               return false;

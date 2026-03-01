@@ -882,6 +882,7 @@ export function Dashboard({
           refreshRateLimit();
           if (data.status === "completed") {
             setScanStatus("completed");
+            setResultsLoading(true);
             fetchResults(scanIdVal);
             toast(`Scan complete — ${data.repoCount ?? 0} repos analyzed`, "success");
             if (selectedOrgId) {
@@ -909,6 +910,11 @@ export function Dashboard({
             setError("Scan failed. This may be due to GitHub API rate limits or permission issues.");
             toast("Scan failed", "error");
           }
+          if (data.status === "cancelled") {
+            setScanStatus("cancelled");
+            setScanStatusInfo(null);
+            toast("Scan cancelled", "info");
+          }
         }
       } catch {}
     };
@@ -920,7 +926,7 @@ export function Dashboard({
   }, [fetchResults, refreshRateLimit, throttledRefreshRateLimit, toast, selectedOrgId, fetchScanHistory, fetchOrgStats, isFirstScan]);
 
   useEffect(() => {
-    if (!scanId || scanStatus === "completed" || scanStatus === "failed") return;
+    if (!scanId || scanStatus === "completed" || scanStatus === "failed" || scanStatus === "cancelled") return;
     connectSSE(scanId);
     return () => {
       sseRef.current?.close();
@@ -1057,6 +1063,30 @@ export function Dashboard({
     setScanId(null);
     setError(null);
     startScan();
+  }
+
+  async function cancelScan() {
+    if (!scanId) {
+      toast("No scan to cancel", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/scan/${scanId}/cancel`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to cancel");
+      }
+      sseRef.current?.close();
+      sseRef.current = null;
+      setScanStatus("cancelled");
+      setScanStatusInfo(null);
+      if (selectedOrgId) {
+        fetchScanHistory(selectedOrgId);
+      }
+      toast("Scan cancelled", "info");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed to cancel scan", "error");
+    }
   }
 
   async function exportCSV() {
@@ -1612,6 +1642,7 @@ export function Dashboard({
                 isScanning={isScanning}
                 resultsLoading={resultsLoading}
                 onStartScan={selectedOrgId && !selectedOrgId.startsWith("temp-") && !isScanning ? startScan : undefined}
+                onCancelScan={isScanning && scanId ? cancelScan : undefined}
                 relativeTime={relativeTime}
               />
             </TabContent>
